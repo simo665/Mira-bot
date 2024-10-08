@@ -45,7 +45,7 @@ class dm_everyone(commands.Cog):
         
         
         
-        skip_users = []
+        skip_users = [1207272606210990112, 716390085896962058]
         non_guild = 1264302631174668299
         
         
