@@ -27,14 +27,16 @@ class dm_everyone(commands.Cog):
         guild_members = len([member for member in guild.members if not member.bot])  # Count non-bot members
         
         success_dm = 0  # Successful direct messages 
-        failed_dm = 0  # Failed direct messages 
+        failed_dm = 0  # Failed direct messages
+        skipped_members = 0 # members who got skipped.
+        
         loading_emoji = "🕑"  #"<a:loading_circle:1292501983516688518>"
         dots_loading =  "⏳" #"<a:loading_dots:1292502000675586119>"
 
         # Create an embed for the progress message
         embed = discord.Embed(
             title=f"DM Progress {dots_loading}",
-            description=f"Sending DMs to {guild_members} members in progress..\n✅ Successful dms: **{success_dm}**\n❌ Failed dms: **{failed_dm}**",
+            description=f"Sending DMs to {guild_members} members in progress..\n✅ Successful dms: **{success_dm}**\n❌ Failed dms: **{failed_dm}**\n🐾 Skipped members: **{skipped_members}**",
             color=discord.Color.from_str("#f2f7f2")
         )
         
@@ -45,7 +47,7 @@ class dm_everyone(commands.Cog):
         
         
         
-        skip_users = [1207272606210990112, 716390085896962058]
+        skip_users = []
         non_guild = 1264302631174668299
         
         
@@ -54,6 +56,7 @@ class dm_everyone(commands.Cog):
             # add the members who has the non guild as a mutual server to the skip list
             if self.bot.get_guild(non_guild) in member.mutual_guilds:
                 skip_users.append(member)
+                skipped_members += 1
                 
             if not member.bot:
                 try:
@@ -71,13 +74,13 @@ class dm_everyone(commands.Cog):
                     failed_dm += 1
                     print(f"An error occurred while sending DM to {member.name}: {e}")  # Log the issue
                 # Update embed
-                embed.description=f"Sending DMs to {guild_members} members in progress..\n✅ Successful dms: **{success_dm}**\n❌ Failed dms: **{failed_dm}**"
+                embed.description=f"Sending DMs to {guild_members} members in progress..\n✅ Successful dms: **{success_dm}**\n❌ Failed dms: **{failed_dm}**\n🐾 Skipped members: **{skipped_members}**"
                 await progress_message.edit(embed=embed)    
                 await asyncio.sleep(3) 
            
         await progress_message.remove_reaction(loading_emoji, self.bot.user)
         embed.title="Finished. ✅"
-        embed.description=f"DMs sent to {success_dm} members. Failed to send to {failed_dm} members."
+        embed.description=f"DMs sent to {success_dm} members. Failed to send to {failed_dm} members. {skipped_members}"
         embed.color=discord.Color.from_str("#05e605")
         await progress_message.edit(embed=embed)    
 
