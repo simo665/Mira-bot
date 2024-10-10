@@ -9,7 +9,7 @@ class MessagesEvents(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         # Define the emojis
-        loding_heart = "<a:loading_heart:1294048090189332537>"
+        loading_heart = "<a:loading_heart:1294048090189332537>"
         red_hearts = "<a:redhearts:1294048122011521064>"
 
         # Ignore messages from the bot itself
