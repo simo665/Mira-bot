@@ -7,6 +7,10 @@ import os
 
 bot = commands.Bot(command_prefix='$', intents=intents)
 
+
+# variables 
+loding_heart = "<a:loading_heart:1294048090189332537>"
+red_hearts = "<a:redhearts:1294048122011521064>"
 # On ready event
 @bot.event
 async def on_ready():
@@ -16,15 +20,12 @@ async def on_ready():
 async def on_message(message):
     if message.author == bot.user:
         return
-        
-    if message.content == "simo":
-        await message.channel.send("Simo the best ❤️")
-    if message.content.lower() in ("welcome", "wlc"):
-        await message.add_reaction("<a:Love_loading:1281304555904303145>")
+    if any(word in message.content.lower() for word in ("welcome", "wlc")):
+        await message.add_reaction(loading_heart)
         await asyncio.sleep(1.8)
-        await message.remove_reaction("<a:Love_loading:1281304555904303145>", bot.user)
+        await message.remove_reaction(loading_heart, bot.user)
         await asyncio.sleep(0.1)
-        await message.add_reaction("<a:heartsFlyingR:1281304524304416818>")
+        await message.add_reaction(red_hearts)
     await bot.process_commands(message)
 
 
