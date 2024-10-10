@@ -28,7 +28,7 @@ class dm_everyone(commands.Cog):
         loading_emoji = "🕑"
         dots_loading = "⏳"
         delay = 0
-        skip_users = []
+        skip_users = [929953931143041064]
         non_guild = 1264302631174668299
         batch_count = 0
         
@@ -47,7 +47,7 @@ class dm_everyone(commands.Cog):
                 skipped_members += 1
             
             if not member.bot and member not in skip_users:
-                if guild_members <= 1000:
+                if guild_members <= 50:
                     try:
                         await member.send(message)
                         success_dm += 1
@@ -62,15 +62,14 @@ class dm_everyone(commands.Cog):
                     await asyncio.sleep(delay)
                 else:
                     await ctx.send("Large server detected. Sending DMs in batches...")
-                    batch_size = 50
+                    batch_size = 10
                     members_list = [m for m in guild.members if not m.bot]
                     for i in range(0, len(members_list), batch_size):
                         batch = members_list[i:i + batch_size]
                         for member in batch:
                             try:
-                                if member not in skip_users:
-                                    await member.send(message)
-                                    success_dm += 1
+                                await member.send(message)
+                                success_dm += 1
                             except discord.Forbidden:
                                 failed_dm += 1
                                 continue
