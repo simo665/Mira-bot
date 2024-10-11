@@ -39,7 +39,7 @@ class TicketSystem(commands.Cog):
         )
 
         # Ping the mods role
-        mods_role = discord.utils.get(guild.roles, name="Mods")  # Replace with your moderators role name
+        mods_role = discord.utils.get(guild.roles, name="Ticket Manager")  # Replace with your moderators role name
         await ticket_channel.send(f"{mods_role.mention} New ticket created by {user.mention}.")
 
         # Store the ticket info
