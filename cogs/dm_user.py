@@ -10,8 +10,8 @@ class dm_user(commands.Cog):
         self.active_conversations = {}  # Dictionary to store user conversations
         self.first_time_dm = {}  # Dictionary to check if it's the first message from a user
         
-        # Ensure logs directory exists
-        self.logs_dir = 'logs'
+        # Set the path for the logs directory inside 'user/dms_log'
+        self.logs_dir = os.path.join('user', 'dms_log')
         if not os.path.exists(self.logs_dir):
             os.makedirs(self.logs_dir)
 
