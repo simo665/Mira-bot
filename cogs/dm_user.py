@@ -66,6 +66,7 @@ class dm_user(commands.Cog):
                         await recipient.send(embed=dm_back)
                         await message.channel.send("Your reply has been forwarded.")
                         self.active_conversations[message.author.id] = recipient.id
+                        self.first_time_dm[user.id] = False
                     except discord.HTTPException:
                         await message.channel.send("Failed to forward the message.")
                 else:
