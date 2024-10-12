@@ -74,8 +74,7 @@ class dm_user(commands.Cog):
             user = self.bot.get_user(user_id)
             if user:
                 await user.send("Your conversation has been closed due to inactivity.")
-            print(f"Conversation with {user_id} closed due to inactivity.")
-
+            
     @commands.Cog.listener()
     async def on_message(self, message):
         # Check if it's a direct message and not from a bot
