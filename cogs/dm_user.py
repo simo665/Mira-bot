@@ -9,7 +9,6 @@ class dm_user(commands.Cog):
         self.first_time_dm = {} # Dictionary to check if it's the first message from a user
 
     @commands.command()
-    @commands.has_role("staff team")
     async def dm(self, ctx, user: discord.User, *, message): 
         try:
             # Determine the server and member based on whether the command is in DMs or server
@@ -27,7 +26,8 @@ class dm_user(commands.Cog):
             if highest_role:
                 author_name = f"{ctx.author.display_name} ({highest_role.name})"
             else:
-                author_name = ctx.author.display_name
+                await ctx.send("This command is only for moderators.")
+                return 
 
             dm_embed = discord.Embed(color=0xFFB6C1)
             dm_embed.add_field(name=f"{author_name}", value=f"**{message}**")
