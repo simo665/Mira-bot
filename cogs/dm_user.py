@@ -1,14 +1,14 @@
 import discord
 from discord.ext import commands
 from utils.roles import get_highest_relevant_role  # Import the function
-from discord.ext.commands import CommandOnCooldown
+import asyncio  # For using sleep
 
 class dm_user(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.active_conversations = {}  # Dictionary to store user conversations
         self.first_time_dm = {}  # Dictionary to check if it's the first message from a user
-        self.close_cooldown = {}  # Dictionary to manage close command cooldowns
+        self.inactivity_cooldowns = {}  # Track inactivity timers
 
     @commands.command()
     async def dm(self, ctx, user: discord.User, *, message): 
@@ -44,28 +44,37 @@ class dm_user(commands.Cog):
             
             # Track the conversation
             self.active_conversations[user.id] = ctx.author.id
+            
+            # Reset inactivity timer
+            await self.reset_inactivity_timer(user.id)
 
         except discord.Forbidden:
             await ctx.send(f"Couldn't send a DM to {user.name}. They may have DMs disabled or blocked the bot.")
         except discord.HTTPException as e:
             await ctx.send(f"Failed to send the message due to an API error: {e}")
 
-    @commands.command()
-    @commands.cooldown(1, 60, commands.BucketType.user)  # 1 use per 60 seconds
-    async def close(self, ctx, user: discord.User):
-        """Close the conversation with a user."""
-        if user.id in self.active_conversations:
-            del self.active_conversations[user.id]
-            await ctx.send(f"Conversation with {user.name} has been closed.")
-        else:
-            await ctx.send(f"No active conversation found with {user.name}.")
+    async def reset_inactivity_timer(self, user_id):
+        """Resets the inactivity timer for a user."""
+        if user_id in self.inactivity_cooldowns:
+            self.inactivity_cooldowns[user_id].cancel()  # Cancel any existing timer
 
-    @close.error
-    async def close_error(self, ctx, error):
-        if isinstance(error, CommandOnCooldown):
-            await ctx.send(f"This command is on cooldown. Try again in {int(error.retry_after)} seconds.")
-        else:
-            await ctx.send("An error occurred while trying to close the conversation.")
+        # Start a new inactivity timer
+        self.inactivity_cooldowns[user_id] = self.bot.loop.create_task(self.inactivity_timeout(user_id))
+
+    async def inactivity_timeout(self, user_id):
+        """Waits for 300 seconds (5 minutes) before closing the conversation due to inactivity."""
+        await asyncio.sleep(300)  # Wait for 5 minutes
+        await self.close_conversation(user_id)
+
+    async def close_conversation(self, user_id):
+        """Closes the conversation with the specified user."""
+        if user_id in self.active_conversations:
+            del self.active_conversations[user_id]
+            del self.inactivity_cooldowns[user_id]  # Remove the cooldown task
+            user = self.bot.get_user(user_id)
+            if user:
+                await user.send("Your conversation has been closed due to inactivity.")
+            print(f"Conversation with {user_id} closed due to inactivity.")
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -85,6 +94,7 @@ class dm_user(commands.Cog):
                         await recipient.send(embed=dm_back)
                         await message.channel.send("Your reply has been forwarded.")
                         self.active_conversations[message.author.id] = recipient.id
+                        await self.reset_inactivity_timer(recipient.id)  # Reset timer for the recipient
                     except discord.HTTPException:
                         await message.channel.send("Failed to forward the message.")
                 else:
