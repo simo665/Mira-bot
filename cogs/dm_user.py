@@ -47,8 +47,8 @@ class dm_user(commands.Cog):
                     try:
                         # Forward the reply to the original sender:
                         dm_back = discord.Embed(
-                            title="Moderation Message",
-                            color=FF6AFF78 
+                            title="User reply",
+                            color=0x90EE90 
                             )
                         dm_back.add_field(name=f"{message.author.display_name}:", value=message.content)
                         dm_back.add_field(name=f"Do this cmd to reply:", value=f"$dm {message.author} (your message here)")
