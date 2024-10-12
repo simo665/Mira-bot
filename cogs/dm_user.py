@@ -30,8 +30,8 @@ class dm_user(commands.Cog):
 
         except discord.Forbidden:
             await ctx.send(f"Couldn't send a DM to {user.name}. They may have DMs disabled or blocked the bot.")
-        except discord.HTTPException:
-            await ctx.send("Failed to send the message due to an API error.")
+        except discord.HTTPException as e:
+            await ctx.send("Failed to send the message due to an API error: {e}")
 
     # Listen for incoming direct messages
     @commands.Cog.listener()
