@@ -9,6 +9,7 @@ class dm_user(commands.Cog):
         self.first_time_dm = {} # Dictionary to check if it's the first message from a user
 
     @commands.command()
+    @commands.has_role("staff team")
     async def dm(self, ctx, user: discord.User, *, message): 
         try:
             # Determine the server and member based on whether the command is in DMs or server
@@ -29,7 +30,7 @@ class dm_user(commands.Cog):
                 author_name = ctx.author.display_name
 
             dm_embed = discord.Embed(color=0xFFB6C1)
-            dm_embed.add_field(name=f"{author_name}:", value=message)
+            dm_embed.add_field(name=f"{author_name}", value=f"**{message}**")
             dm_embed.add_field(name="This message is not appropriate?", value=f"[Click to report](https://discord.com/channels/1264302631174668299/1276072321127550987) *{ctx.author.name}*")
             dm_embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url)
             await user.send(embed=dm_embed)
@@ -59,7 +60,7 @@ class dm_user(commands.Cog):
                 if recipient:
                     try:
                         dm_back = discord.Embed(color=0x90EE90)
-                        dm_back.add_field(name=f"{message.author.display_name}:", value=message.content)
+                        dm_back.add_field(name=f"{message.author.display_name}", value=f"**{message.content}**")
                         dm_back.add_field(name="Do this cmd to reply:", value=f"$dm {message.author} (your message here)")
                         dm_back.set_author(name=message.author, icon_url=message.author.avatar.url)
                         await recipient.send(embed=dm_back)
