@@ -12,12 +12,11 @@ class dm_user(commands.Cog):
     @commands.command()
     async def dm(self, ctx, user: discord.User, *, message):
         try:
-            # Send DM to the user
-            highest_role = sorted(ctx.author.roles, key=lambda role: role.position, reverse=True)[0]
+        
             dm_embed = discord.Embed(
                 color=0xFFB6C1 
             )
-            dm_embed.add_field(name=f"{ctx.author.display_name} *({highest_role.name})*:", value=message)
+            dm_embed.add_field(name=f"{ctx.author.display_name} *(Moderation)*:", value=message)
             dm_embed.add_field(name=f"This message is not appropriate?", value=f"[Click to report](https://discord.com/channels/1264302631174668299/1276072321127550987) *{ctx.author.name}*")
             dm_embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url)
             await user.send(embed=dm_embed)
@@ -47,7 +46,6 @@ class dm_user(commands.Cog):
                     try:
                         # Forward the reply to the original sender:
                         dm_back = discord.Embed(
-                            title="User reply",
                             color=0x90EE90 
                             )
                         dm_back.add_field(name=f"{message.author.display_name}:", value=message.content)
