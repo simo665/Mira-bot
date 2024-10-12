@@ -13,9 +13,7 @@ class dm_user(commands.Cog):
     async def dm(self, ctx, user: discord.User, *, message):
         try:
             # Send DM to the user
-            time = datetime.datetime.now().strftime("%d/%m/%Y - %H:%M:%S")
-           
-            await user.send(f"**{ctx.author}:** {message}\n-# This message is not appropriate? [Click to report](https://discord.com/channels/1264302631174668299/1276072321127550987)\n-# {time}")
+            await user.send(f"**{ctx.author}:** {message}\n-# This message is not appropriate? [Click to report](https://discord.com/channels/1264302631174668299/1276072321127550987)")
             await ctx.send(f"Message sent successfully to {user.name}")
             if user.id not in self.first_time_dm:
                 await user.send("You can reply to this message by just sending a message here.")
@@ -42,9 +40,8 @@ class dm_user(commands.Cog):
                 recipient = self.bot.get_user(recipient_id)
                 if recipient:
                     try:
-                        time = datetime.datetime.now().strftime("%d/%m/%Y - %H:%M:%S")
-                        # Forward the reply to the original sender
-                        await recipient.send(f"**{message.author}:** {message.content}\n-# do this cmd to reply `$dm {message.author} (your message here)`. {time}")
+                     # Forward the reply to the original sender
+                        await recipient.send(f"**{message.author}:** {message.content}\n-# do this cmd to reply `$dm {message.author} (your message here)`.")
                         #await asyncio.sleep(1)
                         await message.channel.send(f"Your reply has been forwarded.")
                         self.active_conversations[user.id] = message.author.id
@@ -58,9 +55,5 @@ class dm_user(commands.Cog):
                 else:
                     pass 
                     
-        
-
-
-
 async def setup(bot):
     await bot.add_cog(dm_user(bot))
