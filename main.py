@@ -12,10 +12,6 @@ bot = commands.Bot(command_prefix='$', intents=intents)
 async def on_ready():
     print(f'{bot.user} is online')
 
-@bot.event
-async def on_message(message):
-    await bot.process_commands(message)
-
 
 async def load_cogs():
     for filename in os.listdir("./cogs"):
