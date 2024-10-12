@@ -30,9 +30,6 @@ class MessagesEvents(commands.Cog):
             except Exception as e:
                 print(f"An error occurred: {e}")
         
-        # Process other commands if any
-        await self.bot.process_commands(message)
-
 # Setup function to add the cog
 async def setup(bot):
     await bot.add_cog(MessagesEvents(bot))
