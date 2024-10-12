@@ -15,11 +15,10 @@ class dm_user(commands.Cog):
             # Send DM to the user
             dm_embed = discord.Embed(
                 title="Moderation Message",
-                #description=f"**{ctx.author.display_name}**: {message}",
-                color=0xFFB6C1  # Set the color here
+                color=0xFFB6C1 
             )
             dm_embed.add_field(name=f"{ctx.author.display_name}:", value=message)
-            dm_embed.add_field(name=f"-# This message is not appropriate?", value="[Click to report](https://discord.com/channels/1264302631174668299/1276072321127550987) *{ctx.author.name}*")
+            dm_embed.add_field(name=f"This message is not appropriate?", value=f"[Click to report](https://discord.com/channels/1264302631174668299/1276072321127550987) *{ctx.author.name}*")
             dm_embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url)
             await user.send(embed=dm_embed)
             await ctx.send(f"Message sent successfully to {user.name}")
@@ -46,8 +45,15 @@ class dm_user(commands.Cog):
                 recipient = self.bot.get_user(recipient_id)
                 if recipient:
                     try:
-                     # Forward the reply to the original sender
-                        await recipient.send(f"**{message.author}:** {message.content}\n-# do this cmd to reply `$dm {message.author} (your message here)`.")
+                        # Forward the reply to the original sender:
+                        dm_back = discord.Embed(
+                            title="Moderation Message",
+                            color=FF6AFF78 
+                            )
+                        dm_back.add_field(name=f"{message.author.display_name}:", value=message.content)
+                        dm_back.add_field(name=f"Do this cmd to reply:", value=f"$dm {message.author} (your message here)")
+                        dm_back.set_author(name=message.author, icon_url=message.author.avatar.url)
+                        await recipient.send(embed=dm_back)
                         #await asyncio.sleep(1)
                         await message.channel.send(f"Your reply has been forwarded.")
                         self.active_conversations[user.id] = message.author.id
