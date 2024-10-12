@@ -1,12 +1,14 @@
 import discord
 from discord.ext import commands
 from utils.roles import get_highest_relevant_role  # Import the function
+from discord.ext.commands import CommandOnCooldown
 
 class dm_user(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.active_conversations = {} # Dictionary to store user conversations
-        self.first_time_dm = {} # Dictionary to check if it's the first message from a user
+        self.active_conversations = {}  # Dictionary to store user conversations
+        self.first_time_dm = {}  # Dictionary to check if it's the first message from a user
+        self.close_cooldown = {}  # Dictionary to manage close command cooldowns
 
     @commands.command()
     async def dm(self, ctx, user: discord.User, *, message): 
@@ -47,6 +49,23 @@ class dm_user(commands.Cog):
             await ctx.send(f"Couldn't send a DM to {user.name}. They may have DMs disabled or blocked the bot.")
         except discord.HTTPException as e:
             await ctx.send(f"Failed to send the message due to an API error: {e}")
+
+    @commands.command()
+    @commands.cooldown(1, 60, commands.BucketType.user)  # 1 use per 60 seconds
+    async def close(self, ctx, user: discord.User):
+        """Close the conversation with a user."""
+        if user.id in self.active_conversations:
+            del self.active_conversations[user.id]
+            await ctx.send(f"Conversation with {user.name} has been closed.")
+        else:
+            await ctx.send(f"No active conversation found with {user.name}.")
+
+    @close.error
+    async def close_error(self, ctx, error):
+        if isinstance(error, CommandOnCooldown):
+            await ctx.send(f"This command is on cooldown. Try again in {int(error.retry_after)} seconds.")
+        else:
+            await ctx.send("An error occurred while trying to close the conversation.")
 
     @commands.Cog.listener()
     async def on_message(self, message):
