@@ -14,7 +14,7 @@ class dm_user(commands.Cog):
         try:
             # Send DM to the user
             dm_embed = discord.Embed(
-                title="Moderation Message"
+                title="Moderation Message",
                 description=f"{message}\n-# This message is not appropriate? [Click to report](https://discord.com/channels/1264302631174668299/1276072321127550987) *{ctx.author.name}*"
                 )
             dm_embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url)
