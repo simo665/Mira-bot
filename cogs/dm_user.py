@@ -15,11 +15,12 @@ class dm_user(commands.Cog):
             # Send DM to the user
             dm_embed = discord.Embed(
                 title="Moderation Message",
-                description=f"**{ctx.author.display_name}**: {message}",
+                #description=f"**{ctx.author.display_name}**: {message}",
                 color=0xFFB6C1  # Set the color here
             )
+            dm_embed.add_field(name=f"{ctx.author.display_name}:", value=message)
+            dm_embed.add_field(name=f"-# This message is not appropriate?", value="[Click to report](https://discord.com/channels/1264302631174668299/1276072321127550987) *{ctx.author.name}*")
             dm_embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url)
-            dm_embed.set_footer(text=f"-# This message is not appropriate? [Click to report](https://discord.com/channels/1264302631174668299/1276072321127550987) *{ctx.author.name}*")
             await user.send(embed=dm_embed)
             await ctx.send(f"Message sent successfully to {user.name}")
             if user.id not in self.first_time_dm:
