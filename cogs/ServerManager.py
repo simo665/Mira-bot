@@ -37,13 +37,18 @@ class ServerManager(commands.Cog):
     @commands.command(aliases=["fm", "firstmessage"])
     async def first_message(self, ctx):
         """Jump to the first message in the current channel."""
+        # Fetch the first message in the channel
         first_message = None
         async for message in ctx.channel.history(oldest_first=True, limit=1):
             first_message = message
         if first_message:
-            await ctx.send(f"Here's the first message in this channel: {first_message.jump_url}")
+            # Create a button view
+            fm_jump = discord.ui.View()
+            button = discord.ui.Button(label="Jump to the First Message", url=first_message.jump_url)
+            fm_jump.add_item(button)
+            await ctx.send(view=fm_jump)
         else:
             await ctx.send("Couldn't find the first message.")
-    
+            
 async def setup(bot):
     await bot.add_cog(ServerManager(bot))
