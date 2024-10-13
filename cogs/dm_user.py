@@ -12,9 +12,6 @@ class dm_user(commands.Cog):
 
     @commands.command()
     async def dm(self, ctx, user: discord.User, *, message): 
-        if ctx.author.id in self.active_conversations:
-            await ctx.send("You are already in an active conversation with another user. Please close that conversation first.")
-            return
             
         try:
             # Determine the server and member based on whether the command is in DMs or server
@@ -96,9 +93,8 @@ class dm_user(commands.Cog):
                 if recipient:
                     try:
                         dm_back = discord.Embed(color=0x90EE90)
-                        dm_back.add_field(name=f"{message.author.display_name}", value=f"**{message.content}**")
-                        dm_back.add_field(name="Do this cmd to reply:", value=f"$dm {message.author} (your message here)")
-                        dm_back.add_field(name="Do this cmd to close conversation:", value=f"$close {message.author.name}")
+                        dm_back.add_field(name=f"{message.author.display_name}", value=f"## **{message.content}**")
+                        dm_back.add_field(name="Do this cmds to reply or close:", value=f"$dm {message.author} (your message here)\n $close {message.author}")
                         dm_back.set_author(name=message.author, icon_url=message.author.avatar.url)
                         await recipient.send(embed=dm_back)
                         await message.channel.send("Your reply has been forwarded.")
