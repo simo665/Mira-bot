@@ -6,6 +6,7 @@ import webserver
 import os
 
 bot = commands.Bot(command_prefix='m!', intents=intents)
+bot.remove_command("help")
 
 # On ready event
 @bot.event
