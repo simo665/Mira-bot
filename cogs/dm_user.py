@@ -1,18 +1,21 @@
 import discord
 from discord.ext import commands
 from utils.roles import get_highest_relevant_role  # Import the function
-import asyncio  # For using sleep
+from discord.ext.commands import CommandOnCooldown
 
 class dm_user(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.active_conversations = {}  # Dictionary to store user conversations
         self.first_time_dm = {}  # Dictionary to check if it's the first message from a user
-        self.inactivity_cooldowns = {}  # Track inactivity timers
+        self.close_cooldown = {}  # Dictionary to manage close command cooldowns
 
     @commands.command()
     async def dm(self, ctx, user: discord.User, *, message): 
         try:
+            if ctx.author.id in self.active_conversations:
+                await ctx.send("You are already in an active conversation with another user. Please close that conversation first.")
+                return
             # Determine the server and member based on whether the command is in DMs or server
             if isinstance(ctx.channel, discord.DMChannel):
                 guild = self.bot.get_guild(1264302631174668299)  # Replace with your server ID
@@ -44,23 +47,28 @@ class dm_user(commands.Cog):
             
             # Track the conversation
             self.active_conversations[user.id] = ctx.author.id
-            
-            # Reset inactivity timer
-            await self.reset_inactivity_timer(user.id)
 
         except discord.Forbidden:
             await ctx.send(f"Couldn't send a DM to {user.name}. They may have DMs disabled or blocked the bot.")
         except discord.HTTPException as e:
             await ctx.send(f"Failed to send the message due to an API error: {e}")
 
-    async def reset_inactivity_timer(self, user_id):
-        """Resets the inactivity timer for a user."""
-        if user_id in self.inactivity_cooldowns:
-            self.inactivity_cooldowns[user_id].cancel()  # Cancel any existing timer
+    @commands.command()
+    async def close(self, ctx, user: discord.User):
+        """Close the conversation with a user."""
+        if user.id in self.active_conversations:
+            del self.active_conversations[user.id]
+            await ctx.send(f"Conversation with {user.name} has been closed.")
+            await user.send(f"Conversation with {ctx.author} has been closed.")
+        else:
+            await ctx.send(f"No active conversation found with {user.name}.")
 
-        # Start a new inactivity timer
-        self.inactivity_cooldowns[user_id] = self.bot.loop.create_task(self.inactivity_timeout(user_id))
-
+    @close.error
+    async def close_error(self, ctx, error):
+        if isinstance(error, CommandOnCooldown):
+            await ctx.send(f"This command is on cooldown. Try again in {int(error.retry_after)} seconds.")
+        else:
+            await ctx.send("An error occurred while trying to close the conversation.")
     async def inactivity_timeout(self, user_id):
         """Waits for 300 seconds (5 minutes) before closing the conversation due to inactivity."""
         await asyncio.sleep(300)  # Wait for 5 minutes
@@ -73,8 +81,8 @@ class dm_user(commands.Cog):
             del self.inactivity_cooldowns[user_id]  # Remove the cooldown task
             user = self.bot.get_user(user_id)
             if user:
-                await user.send("Your conversation has been closed due to inactivity.")
-            
+                await user.send("Your conversation has been closed due to inactivity.")         
+                
     @commands.Cog.listener()
     async def on_message(self, message):
         # Check if it's a direct message and not from a bot
@@ -89,11 +97,11 @@ class dm_user(commands.Cog):
                         dm_back = discord.Embed(color=0x90EE90)
                         dm_back.add_field(name=f"{message.author.display_name}", value=f"**{message.content}**")
                         dm_back.add_field(name="Do this cmd to reply:", value=f"$dm {message.author} (your message here)")
+                        dm_back.add_field(name="Do this cmd to close conversation:", value=f"$close {message.author.name}")
                         dm_back.set_author(name=message.author, icon_url=message.author.avatar.url)
                         await recipient.send(embed=dm_back)
                         await message.channel.send("Your reply has been forwarded.")
                         self.active_conversations[message.author.id] = recipient.id
-                        await self.reset_inactivity_timer(recipient.id)  # Reset timer for the recipient
                     except discord.HTTPException:
                         await message.channel.send("Failed to forward the message.")
                 else:
