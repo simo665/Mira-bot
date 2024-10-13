@@ -12,10 +12,11 @@ class dm_user(commands.Cog):
 
     @commands.command()
     async def dm(self, ctx, user: discord.User, *, message): 
+        if ctx.author.id in self.active_conversations:
+            await ctx.send("You are already in an active conversation with another user. Please close that conversation first.")
+            return
+            
         try:
-            if ctx.author.id in self.active_conversations:
-                await ctx.send("You are already in an active conversation with another user. Please close that conversation first.")
-                return
             # Determine the server and member based on whether the command is in DMs or server
             if isinstance(ctx.channel, discord.DMChannel):
                 guild = self.bot.get_guild(1264302631174668299)  # Replace with your server ID
