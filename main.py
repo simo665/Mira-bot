@@ -5,7 +5,7 @@ from config import TOKEN, intents
 import webserver 
 import os
 
-bot = commands.Bot(command_prefix='$', intents=intents)
+bot = commands.Bot(command_prefix.lower()='m!', intents=intents)
 
 # On ready event
 @bot.event
