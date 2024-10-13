@@ -94,7 +94,7 @@ class dm_user(commands.Cog):
                     try:
                         dm_back = discord.Embed(color=0x90EE90)
                         dm_back.add_field(name=f"{message.author.display_name}", value=f"**{message.content}**")
-                        dm_back.add_field(name="Do this cmds to reply or close:", value=f"$dm {message.author} (your message here)\n $close {message.author}")
+                        dm_back.add_field(name="Do this cmds to reply or close:", value=f"$dm {message.author} (your message here)\n$close {message.author}")
                         dm_back.set_author(name=message.author, icon_url=message.author.avatar.url)
                         await recipient.send(embed=dm_back)
                         await message.channel.send("Your reply has been forwarded.")
