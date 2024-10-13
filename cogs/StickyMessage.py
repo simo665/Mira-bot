@@ -55,7 +55,7 @@ class StickyMessage(commands.Cog):
             "content": message
         }
         self.save_sticky_messages()
-        await ctx.send("Sticky message set!")
+        await ctx.add_reaction("<a:heart:1294048146682417224>")
 
     @commands.command()
     @commands.has_permissions(manage_messages=True)
@@ -71,7 +71,7 @@ class StickyMessage(commands.Cog):
             
             del self.sticky_messages[ctx.channel.id]
             self.save_sticky_messages()
-            await ctx.send("Sticky message removed.")
+            await ctx.add_reaction("<a:broken_heart:1294048158766202921>")
         else:
             await ctx.send("There is no sticky message to remove in this channel.")
 
