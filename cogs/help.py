@@ -6,7 +6,7 @@ class CustomHelp(commands.Cog):
         self.bot = bot
 
     @commands.command(name="help")
-    async def help_command(self, ctx):
+    async def help(self, ctx):
         """Displays a list of all available commands."""
         embed = discord.Embed(
             title="Bot Commands",
