@@ -35,14 +35,15 @@ class ServerManager(commands.Cog):
         except Exception as e:
             print(f"An error occurred while leaving {guild.name}: {e}")
     @commands.command(aliases=["fm", "firstmessage"])
-    async def FirstMessage(self, ctx):
+    async def first_message(self, ctx):
         """Jump to the first message in the current channel."""
         # Fetch the first message in the channel
-        first_message = await ctx.channel.history(oldest_first=True, limit=1).flatten()
+        first_message = await ctx.channel.history(oldest_first=True, limit=1).next()
         if first_message:
-            await ctx.send(f"Here's the first message in this channel: {first_message[0].jump_url}")
+            await ctx.send(f"Here's the first message in this channel: {first_message.jump_url}")
         else:
             await ctx.send("Couldn't find the first message.")
-
+            
+    
 async def setup(bot):
     await bot.add_cog(ServerManager(bot))
