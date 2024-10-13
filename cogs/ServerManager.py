@@ -39,7 +39,7 @@ class ServerManager(commands.Cog):
         """Jump to the first message in the current channel."""
         first_message = None
         async for message in ctx.channel.history(oldest_first=True, limit=1):
-        first_message = message
+            first_message = message
         if first_message:
             await ctx.send(f"Here's the first message in this channel: {first_message.jump_url}")
         else:
