@@ -38,22 +38,25 @@ class StickyMessage(commands.Cog):
         if message.channel.id in self.sticky_messages:
             sticky_message_content = self.sticky_messages[message.channel.id]
 
-            # Check if the bot has permission to send messages
-            if message.channel.permissions_for(message.guild.me).send_messages:
-                # Resend the sticky message and delete the previous one if it exists
-                try:
-                    # Delete the previous sticky message for this channel if it exists
-                    if message.channel.id in self.sticky_message_objects:
+            try:
+                # Attempt to delete the previous sticky message if it exists
+                if message.channel.id in self.sticky_message_objects:
+                    try:
                         await self.sticky_message_objects[message.channel.id].delete()
+                    except discord.NotFound:
+                        print(f"Previous sticky message in {message.channel.name} was already deleted.")
+                    except discord.Forbidden:
+                        print(f"Missing permissions to delete messages in {message.channel.name}")
 
-                    # Send the sticky message
-                    self.sticky_message_objects[message.channel.id] = await message.channel.send(sticky_message_content)  
-                except discord.Forbidden:
-                    print(f"Missing permissions to send messages in {message.channel.name}")
-                except Exception as e:
-                    print(f"An error occurred while sending the sticky message: {e}")
+                # Send the sticky message
+                self.sticky_message_objects[message.channel.id] = await message.channel.send(sticky_message_content)  
+            except discord.Forbidden:
+                print(f"Missing permissions to send messages in {message.channel.name}")
+            except Exception as e:
+                print(f"An error occurred while sending the sticky message: {e}")
 
     @commands.command()
+    @commands.has_permissions(manage_messages=True)
     async def stick(self, ctx, *, message):
         """Stick a message to the current channel."""
         if ctx.channel.id in self.sticky_messages:
@@ -66,20 +69,24 @@ class StickyMessage(commands.Cog):
         if ctx.channel.permissions_for(ctx.guild.me).send_messages:
             self.sticky_message_objects[ctx.channel.id] = await ctx.send(message)  # Send the sticky message
             self.save_sticky_messages()  # Save all sticky messages to the file
-            await ctx.send("Sticky message set!")
+            await ctx.add_reaction("<a:heart:1294048146682417224>")
         else:
             await ctx.send("I do not have permission to send messages in this channel.")
 
     @commands.command()
+    @commands.has_permissions(manage_messages=True)
     async def unstick(self, ctx):
         """Remove the sticky message from the current channel."""
         if ctx.channel.id in self.sticky_messages:
             del self.sticky_messages[ctx.channel.id]  # Remove the sticky message
             if ctx.channel.id in self.sticky_message_objects:
-                await self.sticky_message_objects[ctx.channel.id].delete()  # Delete the sticky message if it exists
+                try:
+                    await self.sticky_message_objects[ctx.channel.id].delete()  # Delete the sticky message if it exists
+                except discord.NotFound:
+                    print("Sticky message was already deleted.")
                 del self.sticky_message_objects[ctx.channel.id]  # Remove from the objects dictionary
             self.save_sticky_messages()  # Save all sticky messages to the file
-            await ctx.send("Sticky message removed.")
+            await ctx.add_reaction("<a:heart:1294048146682417224>")
         else:
             await ctx.send("There is no sticky message to remove in this channel.")
 
