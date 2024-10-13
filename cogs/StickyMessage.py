@@ -36,8 +36,19 @@ class StickyMessage(commands.Cog):
         # If there's a sticky message for this channel, delete and resend it
         if message.channel.id in self.sticky_messages:
             sticky_message_content = self.sticky_messages[message.channel.id]
-            sticky_message = await message.channel.send(sticky_message_content)  # Resend the sticky message
-            await sticky_message.delete()  # Optionally delete it right away if you want to keep it at the bottom.
+
+            # Check if the bot has permission to send messages
+            if message.channel.permissions_for(message.guild.me).send_messages:
+                # Resend the sticky message and delete the previous one if it exists
+                try:
+                    if hasattr(self, 'sticky_message'):
+                        await self.sticky_message.delete()  # Delete the previous sticky message if it exists
+
+                    self.sticky_message = await message.channel.send(sticky_message_content)  # Resend the sticky message
+                except discord.Forbidden:
+                    print(f"Missing permissions to send messages in {message.channel.name}")
+                except Exception as e:
+                    print(f"An error occurred while sending the sticky message: {e}")
 
     @commands.command()
     async def stick(self, ctx, *, message):
@@ -47,9 +58,14 @@ class StickyMessage(commands.Cog):
             return
         
         self.sticky_messages[ctx.channel.id] = message  # Save the sticky message content
-        await ctx.send(message)  # Send the sticky message
-        self.save_sticky_messages()  # Save all sticky messages to the file
-        await ctx.send("Sticky message set!")
+        
+        # Check if the bot has permission to send messages
+        if ctx.channel.permissions_for(ctx.guild.me).send_messages:
+            self.sticky_message = await ctx.send(message)  # Send the sticky message
+            self.save_sticky_messages()  # Save all sticky messages to the file
+            await ctx.send("Sticky message set!")
+        else:
+            await ctx.send("I do not have permission to send messages in this channel.")
 
     @commands.command()
     async def unstick(self, ctx):
