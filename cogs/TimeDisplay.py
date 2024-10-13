@@ -5,7 +5,7 @@ import time
 class TimeDisplay(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.update_time_task = None  # Initialize the task variable
+        self.message = None  # Store the message to update
 
     # Function to get the current timestamp in Discord's format
     def get_formatted_timestamp(self):
@@ -16,26 +16,29 @@ class TimeDisplay(commands.Cog):
     @commands.command(name="showtime")
     async def showtime(self, ctx):
         # Send the initial message with the current time
-        message = await ctx.send(self.get_formatted_timestamp())
-
-        # Start the task to update the message every second
-        if self.update_time_task is None or not self.update_time_task.is_running():
-            self.update_time_task = self.update_time(message)
-            self.update_time_task.start()
+        self.message = await ctx.send(self.get_formatted_timestamp())
+        self.update_time.start()  # Start the loop
 
     # Task to update the time every second
     @tasks.loop(seconds=1)
-    async def update_time(self, message):
-        try:
-            await message.edit(content=self.get_formatted_timestamp())
-        except discord.NotFound:
-            # Stop the loop if the message was deleted or the channel is unavailable
-            self.update_time_task.stop()
+    async def update_time(self):
+        if self.message:
+            try:
+                await self.message.edit(content=self.get_formatted_timestamp())
+            except discord.NotFound:
+                self.update_time.stop()  # Stop if the message was deleted
 
     # Stop the task if the cog is unloaded
     @update_time.before_loop
     async def before_update_time(self):
         await self.bot.wait_until_ready()
+
+    # Stop the update loop when the command is finished
+    @commands.command(name="stop")
+    async def stop(self, ctx):
+        """Stops the time update."""
+        self.update_time.stop()
+        await ctx.send("Time updates stopped.")
 
 # Setup function to add the cog to the bot
 async def setup(bot):
