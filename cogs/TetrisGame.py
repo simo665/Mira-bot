@@ -112,6 +112,7 @@ class Tetris(commands.Cog):
                     self.game_over = True
                     await self.channel.send("Game Over!")
                     break
+
     @commands.command(name="tstart")
     async def start_tetris(self, ctx):
         """Starts a game of Tetris."""
@@ -119,59 +120,43 @@ class Tetris(commands.Cog):
         self.make_empty_board()
         embed = discord.Embed(title="Tetris", description=self.format_board(), color=0x077ff7)
         self.message = await ctx.send(embed=embed)
+        await self.message.add_reaction("⬅️")
+        await self.message.add_reaction("➡️")
+        await self.message.add_reaction("⬇️")
+        await self.message.add_reaction("🔄")
         if self.tetris_task:
             self.tetris_task.cancel()
         self.tetris_task = asyncio.create_task(self.run_game())
 
-    @commands.command(name="rotate")
-    async def rotate(self, ctx):
-        """Rotates the current piece."""
-        if self.game_over:
-            await ctx.send("The game is over! Start a new one with `!start_tetris`.")
-            return
-
-        shape = self.shapes[self.current_piece][self.current_rotation]
-        self.remove_piece_from_board(shape, self.current_position)
-        self.current_rotation = (self.current_rotation + 1) % len(self.shapes[self.current_piece])
-        shape = self.shapes[self.current_piece][self.current_rotation]
-        if not self.can_move(shape, self.current_position):
-            self.current_rotation = (self.current_rotation - 1) % len(self.shapes[self.current_piece])
-        self.add_piece_to_board(shape, self.current_position, self.current_piece)
-
-    @commands.command(name="move")
-    async def move(self, ctx, direction: str):
-        """Move the piece left, right, or down."""
-        if self.game_over:
-            await ctx.send("The game is over! Start a new one with `!start_tetris`.")
+    @commands.Cog.listener()
+    async def on_reaction_add(self, reaction, user):
+        """Handles reactions to move or rotate the piece."""
+        if user == self.bot.user or reaction.message != self.message:
             return
 
         shape = self.shapes[self.current_piece][self.current_rotation]
         self.remove_piece_from_board(shape, self.current_position)
 
-        if direction.lower() == "left":
+        if reaction.emoji == "⬅️":
             new_position = (self.current_position[0], self.current_position[1] - 1)
-        elif direction.lower() == "right":
+        elif reaction.emoji == "➡️":
             new_position = (self.current_position[0], self.current_position[1] + 1)
-        elif direction.lower() == "down":
+        elif reaction.emoji == "⬇️":
             new_position = (self.current_position[0] + 1, self.current_position[1])
+        elif reaction.emoji == "🔄":
+            self.current_rotation = (self.current_rotation + 1) % len(self.shapes[self.current_piece])
+            new_position = self.current_position
         else:
-            await ctx.send("Invalid direction! Use 'left', 'right', or 'down'.")
             return
 
-        if self.can_move(shape, new_position):
+        if self.can_move(self.shapes[self.current_piece][self.current_rotation], new_position):
             self.current_position = new_position
-        self.add_piece_to_board(shape, self.current_position, self.current_piece)
-
-    @commands.command(name="stop_tetris")
-    async def stop_tetris(self, ctx):
-        """Stops the Tetris game."""
-        if self.tetris_task:
-            self.tetris_task.cancel()
-            self.tetris_task = None
-            self.game_over = True
-            await ctx.send("Tetris game stopped.")
         else:
-            await ctx.send("No game is currently running.")
+            self.current_rotation = (self.current_rotation - 1) % len(self.shapes[self.current_piece]) if reaction.emoji == "🔄" else self.current_rotation
+
+        self.add_piece_to_board(self.shapes[self.current_piece][self.current_rotation], self.current_position, self.current_piece)
+        embed = discord.Embed(title="Tetris", description=self.format_board(), color=0x077ff7)
+        await self.message.edit(embed=embed)
 
 async def setup(bot):
     await bot.add_cog(Tetris(bot))
