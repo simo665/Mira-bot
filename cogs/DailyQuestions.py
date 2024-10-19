@@ -26,7 +26,7 @@ class DailyQuestions(commands.Cog):
         self.questions.append(question)
 
     # Task to post a question every 5 hours
-    @tasks.loop(hours=5)
+    @tasks.loop(minutes=1)
     async def question_poster(self):
         if self.channel_id is None or not self.questions:
             return  # Do nothing if the channel is not set or there are no questions
