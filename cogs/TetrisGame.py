@@ -112,8 +112,7 @@ class Tetris(commands.Cog):
                     self.game_over = True
                     await self.channel.send("Game Over!")
                     break
-
-@commands.command(name="tstart")
+    @commands.command(name="tstart")
     async def start_tetris(self, ctx):
         """Starts a game of Tetris."""
         self.channel = ctx.channel
