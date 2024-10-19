@@ -403,8 +403,7 @@ async def on_reaction_add(reaction, user):
     if user != bot.user:
         msg = reaction.message
         if str(reaction.emoji) == "▶": #Play button pressed
-            print('User pressed play')
-            await reset_game()
+            await run_game()
             await msg.remove_reaction("❌", bot.user) #Remove delete
             embed = discord.Embed(description=format_board_as_str(), color=embed_colour)
             await msg.remove_reaction("▶", user)
@@ -418,21 +417,17 @@ async def on_reaction_add(reaction, user):
             starting_shape = get_random_shape()
             await run_game(msg, starting_shape)
 
-        if str(reaction.emoji) == "⬅": #Left button pressed
-            print('Left button pressed')
+        if str(reaction.emoji) == "⬅":
             h_movement = -1 #move 1 left
             await msg.remove_reaction("⬅", user)
-        if str(reaction.emoji) == "➡": #Right button pressed
-            print('Right button pressed')
+        if str(reaction.emoji) == "➡": 
             h_movement = 1 #move +1 right
             await msg.remove_reaction("➡", user)
-        if str(reaction.emoji) == "⬇": #Down button pressed
-            print('Down button pressed')
+        if str(reaction.emoji) == "⬇": 
             global down_pressed
             down_pressed = True
             await msg.remove_reaction("⬇", user)
-        if str(reaction.emoji) == "🔃": #Rotate clockwise button pressed
-            print('Rotate clockwise button pressed')
+        if str(reaction.emoji) == "🔃": 
             global rotate_clockwise
             rotate_clockwise = True
             if rotation_pos < 3:
