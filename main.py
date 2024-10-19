@@ -404,7 +404,6 @@ async def on_reaction_add(reaction, user):
         msg = reaction.message
         if str(reaction.emoji) == "▶": #Play button pressed
             await run_game()
-            await msg.remove_reaction("❌", bot.user) #Remove delete
             embed = discord.Embed(description=format_board_as_str(), color=embed_colour)
             await msg.remove_reaction("▶", user)
             await msg.remove_reaction("▶", bot.user)
