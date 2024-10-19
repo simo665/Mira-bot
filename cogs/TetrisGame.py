@@ -49,7 +49,7 @@ class Tetris(commands.Cog):
                 [[1, 0], [1, 1], [1, 2], [2, 1]],
                 [[0, 1], [1, 0], [1, 1], [2, 1]],
             ],
-            # Add more shapes (J, L, S, Z) here
+            # Add shapes for J, L, S, Z similarly
         }
 
     def format_board(self):
@@ -113,7 +113,7 @@ class Tetris(commands.Cog):
                     await self.channel.send("Game Over!")
                     break
 
-    @commands.command(name="tstart")
+@commands.command(name="tstart")
     async def start_tetris(self, ctx):
         """Starts a game of Tetris."""
         self.channel = ctx.channel
@@ -130,6 +130,7 @@ class Tetris(commands.Cog):
         if self.game_over:
             await ctx.send("The game is over! Start a new one with `!start_tetris`.")
             return
+
         shape = self.shapes[self.current_piece][self.current_rotation]
         self.remove_piece_from_board(shape, self.current_position)
         self.current_rotation = (self.current_rotation + 1) % len(self.shapes[self.current_piece])
@@ -144,6 +145,7 @@ class Tetris(commands.Cog):
         if self.game_over:
             await ctx.send("The game is over! Start a new one with `!start_tetris`.")
             return
+
         shape = self.shapes[self.current_piece][self.current_rotation]
         self.remove_piece_from_board(shape, self.current_position)
 
@@ -160,6 +162,17 @@ class Tetris(commands.Cog):
         if self.can_move(shape, new_position):
             self.current_position = new_position
         self.add_piece_to_board(shape, self.current_position, self.current_piece)
+
+    @commands.command(name="stop_tetris")
+    async def stop_tetris(self, ctx):
+        """Stops the Tetris game."""
+        if self.tetris_task:
+            self.tetris_task.cancel()
+            self.tetris_task = None
+            self.game_over = True
+            await ctx.send("Tetris game stopped.")
+        else:
+            await ctx.send("No game is currently running.")
 
 async def setup(bot):
     await bot.add_cog(Tetris(bot))
