@@ -73,7 +73,7 @@ class DailyQuestions(commands.Cog):
         self.question_poster.start()
 
     # Task to post a question every 5 hours
-    @tasks.loop(seconds=5)
+    @tasks.loop(hours=5)
     async def question_poster(self):
         if self.channel_id is None:
             return  # Do nothing if the channel is not set
@@ -81,7 +81,7 @@ class DailyQuestions(commands.Cog):
         channel = self.bot.get_channel(self.channel_id)
         if channel is not None and self.questions:
             question = self.questions[self.current_question_index]
-            await channel.send(f"**Question of the Hour:** {question}")
+            await channel.send(f"**New Question!!:** {question}")
             # Update the index to the next question
             self.current_question_index = (self.current_question_index + 1) % len(self.questions)
 
