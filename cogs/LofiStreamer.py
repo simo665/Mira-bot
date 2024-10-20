@@ -1,11 +1,13 @@
 import discord
 from discord.ext import commands
 import asyncio
+import requests
 
 class LofiStreamer(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.voice_client = None
+        self.is_playing = False
 
     @commands.command(name='join', help='Join the voice channel and start streaming Lofi.')
     async def join(self, ctx):
@@ -33,14 +35,18 @@ class LofiStreamer(commands.Cog):
     async def play_lofi(self):
         LOFI_STREAM_URL = 'https://fluxfm.streamabc.net/flx-chillhop-mp3-128-8581707?sABC=671534s2%230%23pq35s4858p08p687on3n1pr3on77ssr0%23fgernzf.syhksz.qr&aw_0_1st.playerid=streams.fluxfm.de&amsparams=playerid:streams.fluxfm.de;skey:1729443058'  # Your streaming URL
 
-        if self.voice_client and self.voice_client.is_connected():
+        if self.voice_client and self.voice_client.is_connected() and not self.is_playing:
+            self.is_playing = True
+            
             # Play the audio stream directly
-            self.voice_client.play(discord.FFmpegPCMAudio(LOFI_STREAM_URL))
+            audio_source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(LOFI_STREAM_URL), volume=0.5)
+            self.voice_client.play(audio_source, after=self.after_play)
             await asyncio.sleep(1)  # Small delay to ensure audio starts playing
 
     def after_play(self, error):
         if error:
             print(f"An error occurred: {error}")
+        self.is_playing = False  # Allow replaying after one completes
 
 async def setup(bot):
     await bot.add_cog(LofiStreamer(bot))
