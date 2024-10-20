@@ -32,13 +32,16 @@ class LofiStreamer(commands.Cog):
     async def join(self, ctx):
         if ctx.author.voice:
             channel = ctx.author.voice.channel
-            self.voice_client = await channel.connect()
-
-            await ctx.send(f"Joined {channel}. Streaming Lofi playlist...")
-            await self.play_lofi()
+            try:
+                self.voice_client = await channel.connect()
+                await ctx.send(f"Joined {channel}. Streaming Lofi playlist...")
+                await self.play_lofi()
+            except Exception as e:
+                print(f"An error occurred when connecting: {e}")
+                await ctx.send("An error occurred when connecting to the voice channel.")
         else:
             await ctx.send("You need to be in a voice channel to use this command.")
-
+            
     @commands.command(name='leave', help='Disconnect the bot from the voice channel.')
     async def leave(self, ctx):
         if self.voice_client and self.voice_client.is_connected():
