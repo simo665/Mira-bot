@@ -2,14 +2,6 @@ import discord
 from discord.ext import commands
 import asyncio
 
-FFMPEG_OPTIONS = {
-    'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
-    'options': '-vn'
-}
-
-# Replace with your direct lofi audio stream URL
-LOFI_STREAM_URL = 'https://fluxfm.streamabc.net/flx-chillhop-mp3-128-8581707?sABC=671534s2%230%23pq35s4858p08p687on3n1pr3on77ssr0%23fgernzf.syhksz.qr&aw_0_1st.playerid=streams.fluxfm.de&amsparams=playerid:streams.fluxfm.de;skey:1729443058'  # Example URL
-
 class LofiStreamer(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -39,18 +31,16 @@ class LofiStreamer(commands.Cog):
             await ctx.send("The bot is not connected to a voice channel.")
 
     async def play_lofi(self):
-        while self.voice_client and self.voice_client.is_connected():
-            try:
-                # Play the direct audio stream URL
-                self.voice_client.play(discord.FFmpegPCMAudio(LOFI_STREAM_URL, **FFMPEG_OPTIONS))
+        # Replace this URL with your streaming audio link
+        LOFI_STREAM_URL = 'https://fluxfm.streamabc.net/flx-chillhop-mp3-128-8581707?sABC=671534s2%230%23pq35s4858p08p687on3n1pr3on77ssr0%23fgernzf.syhksz.qr&aw_0_1st.playerid=streams.fluxfm.de&amsparams=playerid:streams.fluxfm.de;skey:1729443058'
 
-                # Wait until the bot stops playing
-                while self.voice_client.is_playing():
-                    await asyncio.sleep(1)
+        if self.voice_client and self.voice_client.is_connected():
+            self.voice_client.play(discord.FFmpegPCMAudio(LOFI_STREAM_URL), after=self.after_play)
+            await asyncio.sleep(1)  # Small delay to ensure audio starts playing
 
-            except Exception as e:
-                print(f"An error occurred: {e}")
-                await asyncio.sleep(10)  # Wait before retrying
+    def after_play(self, error):
+        if error:
+            print(f"An error occurred: {error}")
 
 async def setup(bot):
     await bot.add_cog(LofiStreamer(bot))
