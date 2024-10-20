@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-import yt_dlp as youtube_dl  # Changed from youtube_dl to yt_dlp
+import youtube_dl  # Changed from youtube_dl to yt_dlp
 import asyncio
 
 FFMPEG_OPTIONS = {
