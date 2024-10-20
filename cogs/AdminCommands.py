@@ -26,5 +26,5 @@ class AdminCommands(commands.Cog):
                     await message.channel.send("You do not have permission to make me leave the server.")
 
 # Setup function to add the cog to the bot
-async setup(bot: commands.Bot):
+async def setup(bot: commands.Bot):
     await bot.add_cog(AdminCommands(bot))
