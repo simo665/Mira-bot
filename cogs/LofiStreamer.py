@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands
-import youtube_dl  # Changed from youtube_dl to yt_dlp
 import asyncio
 
 FFMPEG_OPTIONS = {
@@ -8,23 +7,13 @@ FFMPEG_OPTIONS = {
     'options': '-vn'
 }
 
-YTDL_OPTIONS = {
-    'format': 'bestaudio',
-    'quiet': True,
-}
-
-ytdl = youtube_dl.YoutubeDL(YTDL_OPTIONS)
-
-# A list of stable Lofi URLs (Replace with reliable URLs as needed)
-LOFI_PLAYLIST = [
-    'https://youtu.be/zLCV6udNmtw' # Lofi Girl Stream
-]
+# Replace with your direct lofi audio stream URL
+LOFI_STREAM_URL = 'https://fluxfm.streamabc.net/flx-chillhop-mp3-128-8581707?sABC=671534s2%230%23pq35s4858p08p687on3n1pr3on77ssr0%23fgernzf.syhksz.qr&aw_0_1st.playerid=streams.fluxfm.de&amsparams=playerid:streams.fluxfm.de;skey:1729443058'  # Example URL
 
 class LofiStreamer(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.voice_client = None
-        self.current_index = 0
 
     @commands.command(name='join', help='Join the voice channel and start streaming Lofi.')
     async def join(self, ctx):
@@ -32,14 +21,14 @@ class LofiStreamer(commands.Cog):
             channel = ctx.author.voice.channel
             try:
                 self.voice_client = await channel.connect()
-                await ctx.send(f"Joined {channel}. Streaming Lofi playlist...")
+                await ctx.send(f"Joined {channel}. Streaming Lofi...")
                 await self.play_lofi()
             except Exception as e:
                 print(f"An error occurred when connecting: {e}")
                 await ctx.send("An error occurred when connecting to the voice channel.")
         else:
             await ctx.send("You need to be in a voice channel to use this command.")
-            
+
     @commands.command(name='leave', help='Disconnect the bot from the voice channel.')
     async def leave(self, ctx):
         if self.voice_client and self.voice_client.is_connected():
@@ -52,31 +41,16 @@ class LofiStreamer(commands.Cog):
     async def play_lofi(self):
         while self.voice_client and self.voice_client.is_connected():
             try:
-                # Get the current Lofi URL from the playlist
-                current_url = LOFI_PLAYLIST[self.current_index]
-                info = ytdl.extract_info(current_url, download=False)
-                url = info['url']
+                # Play the direct audio stream URL
+                self.voice_client.play(discord.FFmpegPCMAudio(LOFI_STREAM_URL, **FFMPEG_OPTIONS))
 
-                # Play the current URL
-                self.voice_client.play(discord.FFmpegPCMAudio(url, **FFMPEG_OPTIONS), after=self.after_play)
-                
                 # Wait until the bot stops playing
-                while self.voice_client.is_playing() or self.voice_client.is_paused():
+                while self.voice_client.is_playing():
                     await asyncio.sleep(1)
-
-                # Move to the next song in the playlist
-                self.current_index = (self.current_index + 1) % len(LOFI_PLAYLIST)
 
             except Exception as e:
                 print(f"An error occurred: {e}")
-                # Move to the next track if an error occurs
-                self.current_index = (self.current_index + 1) % len(LOFI_PLAYLIST)
                 await asyncio.sleep(10)  # Wait before retrying
-
-    def after_play(self, error):
-        if error:
-            print(f"An error occurred: {error}")
-        # No additional actions needed here since play_lofi() loops automatically
 
 async def setup(bot):
     await bot.add_cog(LofiStreamer(bot))
