@@ -31,11 +31,11 @@ class LofiStreamer(commands.Cog):
             await ctx.send("The bot is not connected to a voice channel.")
 
     async def play_lofi(self):
-        # Replace this URL with your streaming audio link
-        LOFI_STREAM_URL = 'https://fluxfm.streamabc.net/flx-chillhop-mp3-128-8581707?sABC=671534s2%230%23pq35s4858p08p687on3n1pr3on77ssr0%23fgernzf.syhksz.qr&aw_0_1st.playerid=streams.fluxfm.de&amsparams=playerid:streams.fluxfm.de;skey:1729443058'
+        LOFI_STREAM_URL = 'https://fluxfm.streamabc.net/flx-chillhop-mp3-128-8581707?sABC=671534s2%230%23pq35s4858p08p687on3n1pr3on77ssr0%23fgernzf.syhksz.qr&aw_0_1st.playerid=streams.fluxfm.de&amsparams=playerid:streams.fluxfm.de;skey:1729443058'  # Your streaming URL
 
         if self.voice_client and self.voice_client.is_connected():
-            self.voice_client.play(discord.FFmpegPCMAudio(LOFI_STREAM_URL), after=self.after_play)
+            # Play the audio stream directly
+            self.voice_client.play(discord.FFmpegPCMAudio(LOFI_STREAM_URL))
             await asyncio.sleep(1)  # Small delay to ensure audio starts playing
 
     def after_play(self, error):
