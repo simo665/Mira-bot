@@ -17,7 +17,7 @@ ytdl = youtube_dl.YoutubeDL(YTDL_OPTIONS)
 
 # A list of stable Lofi URLs (Replace with reliable URLs as needed)
 LOFI_PLAYLIST = [
-    'https://youtu.be/hZx4lNmX5L0?si=A74Z3B5hxSfavpYV' # Lofi Girl Stream
+    'https://youtu.be/zLCV6udNmtw' # Lofi Girl Stream
 ]
 
 class LofiStreamer(commands.Cog):
