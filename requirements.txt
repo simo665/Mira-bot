@@ -3,3 +3,4 @@ python-dotenv
 Flask
 youtube_dl
 PyNaCl
+yt-dlp
