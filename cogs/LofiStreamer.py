@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-import yt_dlp as youtube_dl
+import yt_dlp as youtube_dl  # Changed from youtube_dl to yt_dlp
 import asyncio
 
 FFMPEG_OPTIONS = {
@@ -15,7 +15,7 @@ YTDL_OPTIONS = {
 
 ytdl = youtube_dl.YoutubeDL(YTDL_OPTIONS)
 
-# A list of Lofi URLs (Add more URLs as needed)
+# A list of stable Lofi URLs (Replace with reliable URLs as needed)
 LOFI_PLAYLIST = [
     'https://www.youtube.com/watch?v=jfKfPfyJRdk',  # Lofi Girl Stream
     'https://www.youtube.com/watch?v=DWcJFNfaw9c',  # Another Lofi Stream
@@ -71,12 +71,14 @@ class LofiStreamer(commands.Cog):
 
             except Exception as e:
                 print(f"An error occurred: {e}")
+                # Move to the next track if an error occurs
+                self.current_index = (self.current_index + 1) % len(LOFI_PLAYLIST)
                 await asyncio.sleep(10)  # Wait before retrying
 
     def after_play(self, error):
         if error:
             print(f"An error occurred: {error}")
-        # Nothing else is needed here since play_lofi() loops automatically
+        # No additional actions needed here since play_lofi() loops automatically
 
 async def setup(bot):
     await bot.add_cog(LofiStreamer(bot))
