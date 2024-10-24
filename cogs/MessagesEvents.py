@@ -48,10 +48,9 @@ class MessagesEvents(commands.Cog):
                 # Send a response to the same channel
                 await message.channel.send("<@&1282336485596467242>")
 
-# Setup function to add the cog
-async def setup(bot):
-    await bot.add_cog(KeywordResponder(bot))
-        
+
+
+
 # Setup function to add the cog
 async def setup(bot):
     await bot.add_cog(MessagesEvents(bot))
