@@ -46,7 +46,7 @@ class MessagesEvents(commands.Cog):
             # Check if the message contains the keyword
             if self.keyword in message.content:
                 # Send a response to the same channel
-                await message.channel.send("<@&1282336485596467242>, please mute/ban that user.")
+                await message.channel.send("<@&1282336485596467242>, please assist with this. Take a moment to catch up on the conversation to understand the situation fully.")
 
 
 
