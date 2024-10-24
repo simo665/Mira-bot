@@ -5,6 +5,12 @@ import asyncio
 class MessagesEvents(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        
+
+       # Appeals support Bot ping
+        self.bot = bot
+        self.target_bot_id = 1298903550994284566  
+        self.keyword = "@staff" 
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -29,6 +35,22 @@ class MessagesEvents(commands.Cog):
                 await message.add_reaction(red_hearts)
             except Exception as e:
                 print(f"An error occurred: {e}")
+
+
+       
+
+#______________________________________________
+
+        # Check if the message is from the specific bot
+        if message.author.id == self.target_bot_id:
+            # Check if the message contains the keyword
+            if self.keyword in message.content:
+                # Send a response to the same channel
+                await message.channel.send("<@&1282336485596467242>")
+
+# Setup function to add the cog
+async def setup(bot):
+    await bot.add_cog(KeywordResponder(bot))
         
 # Setup function to add the cog
 async def setup(bot):
