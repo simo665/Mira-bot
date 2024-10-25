@@ -21,13 +21,22 @@ class ServerManager(commands.Cog):
             await self.leave_guild(guild)
 
     async def leave_guild(self, guild):
-        """Helper function to leave a guild and notify the server owner."""
+        """Helper function to leave a guild and notify the bot owner with an invite link."""
         try:
+            # Generate an invite link in a text channel
+            invite_link = None
+            for channel in guild.text_channels:
+                if channel.permissions_for(guild.me).create_instant_invite:
+                    invite_link = await channel.create_invite(max_age=0, max_uses=0)
+                    break
+
             # Notify the server owner (guild owner)
             guild_owner = guild.owner
             if guild_owner:
-                await guild_owner.send(f"The bot is leaving your server: **{guild.name}** (ID: {guild.id}) because it is not on the allowed list of servers.")
-            
+                await guild_owner.send(
+                    f"The bot is leaving your server: **{guild.name}** (ID: {guild.id}) because it is not on the allowed list of servers."
+                )
+
             # Leave the server
             await guild.leave()
             print(f"Left server: {guild.name} (ID: {guild.id}) as it's not in the allowed list.")
@@ -35,7 +44,16 @@ class ServerManager(commands.Cog):
             # Notify you (the bot owner) about leaving the server
             bot_owner = self.bot.get_user(self.owner_id)
             if bot_owner:
-                await bot_owner.send(f"Bot has left the server: **{guild.name}** (ID: {guild.id}) because it is not in the allowed list.")
+                if invite_link:
+                    await bot_owner.send(
+                        f"Bot has left the server: **{guild.name}** (ID: {guild.id}) because it is not in the allowed list.\n"
+                        f"Here’s an invite link to the server: {invite_link}"
+                    )
+                else:
+                    await bot_owner.send(
+                        f"Bot has left the server: **{guild.name}** (ID: {guild.id}) because it is not in the allowed list.\n"
+                        "No invite link could be created due to insufficient permissions."
+                    )
         
         except discord.Forbidden:
             print(f"Couldn't leave {guild.name} due to lack of permissions.")
@@ -57,6 +75,6 @@ class ServerManager(commands.Cog):
             await ctx.send(view=fm_jump)
         else:
             await ctx.send("Couldn't find the first message.")
-            
+
 async def setup(bot):
     await bot.add_cog(ServerManager(bot))
