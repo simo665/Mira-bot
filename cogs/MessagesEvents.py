@@ -48,7 +48,17 @@ class MessagesEvents(commands.Cog):
                 # Send a response to the same channel
                 await message.channel.send("<@&1282336485596467242>, please assist with this. Take a moment to catch up on the conversation to understand the situation fully.")
 
+#_____________________________________________
+    
+    @commands.command()
+    @commands.has_permissions(manage_messages=True) 
+    async def send(self, ctx, *, message: str=None):
+        if not message:
+            await ctx.send("Please include a message to use this command.")
+        await ctx.send(message)
 
+
+    
 
 
 # Setup function to add the cog
