@@ -39,7 +39,7 @@ class ServerManager(commands.Cog):
 
             # Leave the server
             await guild.leave()
-            print(f"Left server: {guild.name} (ID: {guild.id}) as it's not in the allowed list.")
+            print(f"Left server: {guild.name} as it's not in the allowed list.")
 
             # Notify you (the bot owner) about leaving the server
             bot_owner = self.bot.get_user(self.owner_id)
