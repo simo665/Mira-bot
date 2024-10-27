@@ -1,13 +1,11 @@
 import discord
 from discord.ext import commands
-from utils.roles import get_highest_relevant_role  # Import the function
 from discord.ext.commands import CommandOnCooldown
 
 class dm_user(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.active_conversations = {}  # Dictionary to store user conversations
-        self.first_time_dm = {}  # Dictionary to check if it's the first message from a user
         self.close_cooldown = {}  # Dictionary to manage close command cooldowns
 
     @commands.command()
@@ -21,27 +19,9 @@ class dm_user(commands.Cog):
             else:
                 guild = ctx.guild
                 member = ctx.author
-
-            # Get the highest moderation role for the author
-            highest_role = get_highest_relevant_role(member)
-
-            # Format the name with the highest role
-            if highest_role:
-                author_name = f"{ctx.author.display_name} ({highest_role.name})"
-            else:
-                await ctx.send("This command is only for moderators.")
-                return 
-
-            dm_embed = discord.Embed(color=0xFFB6C1)
-            dm_embed.add_field(name=f"{author_name}", value=f"**{message}**")
-            dm_embed.add_field(name="This message is not appropriate?", value=f"[Click to report](https://discord.com/channels/1264302631174668299/1276072321127550987) *{ctx.author.name}*")
-            dm_embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar.url)
-            await user.send(embed=dm_embed)
+        
+            await user.send(message)
             await ctx.send(f"Message sent successfully to {user.name}")
-
-            if user.id not in self.first_time_dm:
-                await user.send("You can reply to this message by just sending a message here.")
-                self.first_time_dm[user.id] = True
             
             # Track the conversation
             self.active_conversations[user.id] = ctx.author.id
@@ -92,12 +72,7 @@ class dm_user(commands.Cog):
                 recipient = self.bot.get_user(recipient_id)
                 if recipient:
                     try:
-                        dm_back = discord.Embed(color=0x90EE90)
-                        dm_back.add_field(name=f"{message.author.display_name}", value=f"**{message.content}**")
-                        dm_back.add_field(name="Do this cmds to reply or close:", value=f"{self.bot.command_prefix}dm {message.author} (your message here)\n{self.bot.command_prefix}close {message.author}")
-                        dm_back.set_author(name=message.author, icon_url=message.author.avatar.url)
-                        await recipient.send(embed=dm_back)
-                        await message.channel.send("Your reply has been forwarded.")
+                        await recipient.send(f"{message.author.display_name}: {message.content}")
                         self.active_conversations[message.author.id] = recipient.id
                     except discord.HTTPException:
                         await message.channel.send("Failed to forward the message.")
