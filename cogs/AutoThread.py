@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 import json
+import asyncio
 import os
 
 class MultiChannelAutoThread(commands.Cog):
@@ -45,6 +46,7 @@ class MultiChannelAutoThread(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         # Ignore messages from bots and messages outside the specified channels
+        await asyncio.sleep(1.5)
         if message.author.bot or str(message.channel.id) not in self.thread_channels:
             return
 
