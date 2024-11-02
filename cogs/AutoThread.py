@@ -3,64 +3,72 @@ from discord.ext import commands
 import json
 import os
 
-class AutoThread(commands.Cog):
+class MultiChannelAutoThread(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.config_file = "auto_thread_config.json"
-        self.thread_channel_id = None
-        self.thread_first_message = None
-        self.load_config()  # Load configuration when the cog is initialized
+        self.thread_channels = {}  # Dictionary to store channel settings
+        self.load_config()
 
     def load_config(self):
-        """Loads the configuration from the JSON file."""
+        """Load channel configuration from a JSON file."""
         if os.path.exists(self.config_file):
             with open(self.config_file, "r") as f:
-                config = json.load(f)
-                self.thread_channel_id = config.get("thread_channel_id")
-                self.thread_first_message = config.get("thread_first_message")
+                self.thread_channels = json.load(f)
 
     def save_config(self):
-        """Saves the configuration to the JSON file."""
-        config = {
-            "thread_channel_id": self.thread_channel_id,
-            "thread_first_message": self.thread_first_message
-        }
+        """Save channel configuration to a JSON file."""
         with open(self.config_file, "w") as f:
-            json.dump(config, f)
+            json.dump(self.thread_channels, f)
 
     @commands.command(name="setthread")
     @commands.has_permissions(manage_channels=True)
-    async def set_thread_channel(self, ctx, channel: discord.TextChannel, *, first_message: str):
-        """Sets the channel for auto-threading and the first message in each thread."""
-        self.thread_channel_id = channel.id
-        self.thread_first_message = first_message
-        self.save_config()  # Save the configuration to a file
-        await ctx.send(f"Auto-threading is set up in {channel.mention} with the first thread message: '{first_message}'")
+    async def set_thread_channel(self, ctx, channel: discord.TextChannel, *, first_message: str = None):
+        """Set a channel for auto-threading with an optional first message."""
+        self.thread_channels[str(channel.id)] = {
+            "first_message": first_message
+        }
+        self.save_config()
+        await ctx.send(f"Auto-threading is set up in {channel.mention} with the first message: '{first_message}'")
 
     @commands.command(name="removethread")
     @commands.has_permissions(manage_channels=True)
     async def remove_thread_channel(self, ctx, channel: discord.TextChannel):
-        """Removes auto-threading for a specific channel."""
-        if self.thread_channel_id == channel.id:
-            self.thread_channel_id = None
-            self.thread_first_message = None
-            self.save_config()  # Save changes
+        """Remove auto-threading for a specific channel."""
+        if str(channel.id) in self.thread_channels:
+            del self.thread_channels[str(channel.id)]
+            self.save_config()
             await ctx.send(f"Auto-threading has been disabled for {channel.mention}.")
         else:
             await ctx.send("Auto-threading is not currently enabled for that channel.")
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        # Ignore messages from bots and messages outside the specified channel
-        if message.author.bot or message.channel.id != self.thread_channel_id:
+        # Ignore messages from bots and messages outside the specified channels
+        if message.author.bot or str(message.channel.id) not in self.thread_channels:
             return
 
         # Create a thread for each message in the specified channel
         thread = await message.create_thread(name="Comments")
 
         # Send the first message in the thread, if set
-        if self.thread_first_message:
-            await thread.send(self.thread_first_message)
+        first_message = self.thread_channels[str(message.channel.id)]["first_message"]
+        if first_message:
+            await thread.send(first_message)
+
+        # Track the thread to delete it if the original message is deleted
+        self.thread_channels[str(message.id)] = thread.id
+        self.save_config()
+
+    @commands.Cog.listener()
+    async def on_message_delete(self, message):
+        """Deletes the thread if the original message is deleted."""
+        thread_id = self.thread_channels.pop(str(message.id), None)
+        if thread_id:
+            thread = self.bot.get_channel(thread_id)
+            if thread:
+                await thread.delete()
+            self.save_config()  # Update the config to remove the deleted thread
 
 async def setup(bot):
-    await bot.add_cog(AutoThread(bot))
+    await bot.add_cog(MultiChannelAutoThread(bot))
