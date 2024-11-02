@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands
-import asyncio
 import json
 import os
 
@@ -67,7 +66,6 @@ class MediaOnlyChannels(commands.Cog):
         if guild_id in self.media_only_channels and channel_id in self.media_only_channels[guild_id]:
             # Delete messages without attachments
             if not message.attachments:
-                await asyncio.sleep(1.5)
                 await message.delete()
                 try:
                     await message.channel.send(f"{message.author.mention}, this channel is for media files only!", delete_after=5)
