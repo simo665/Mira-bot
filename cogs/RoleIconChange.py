@@ -42,7 +42,7 @@ class RoleIconManager(commands.Cog):
         else:  # If an emoji is provided
             try:
                 emoji = await commands.EmojiConverter().convert(ctx, icon_url)
-                if emoji.is_custom_emoji():
+                if isinstance(emoji, discord.Emoji):  # Check if it's a custom emoji
                     await role.edit(icon=emoji.url)
                     await ctx.send(f"Role icon updated for {role.name} successfully with emoji!")
                 else:
