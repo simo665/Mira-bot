@@ -1,63 +1,50 @@
+
 import discord
 from discord.ext import commands
-import aiohttp
+import io
 
-class RoleIconManager(commands.Cog):
+class RoleIconCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name="set_role_icon")
-    @commands.has_permissions(manage_roles=True)
-    async def set_role_icon(self, ctx, role: discord.Role):
-        """Set a role icon using an image attachment."""
-        
-        # Check if the server meets the required boost level
-        if ctx.guild.premium_tier < 2:
-            await ctx.send("This server needs to be at least Boost Level 2 to set role icons.")
-            return
-
-        # Validate bot permissions
-        if not ctx.guild.me.guild_permissions.manage_roles:
-            await ctx.send("I need 'Manage Roles' permission to set role icons.")
-            return
-
-        # Check if the message contains any attachments
+    @commands.command()
+    async def setroleicon(self, ctx, role: discord.Role):
+        """Change the icon of the given role based on an attached image."""
+        # Check if there's an image attached
         if not ctx.message.attachments:
-            await ctx.send("Please attach an image to use as the role icon.")
+            await ctx.send("Please attach an image to set as the role icon.")
             return
 
-        # Get the first attachment
         attachment = ctx.message.attachments[0]
-        
-        # Check if the attachment is an image (based on the file extension)
+
+        # Ensure the attachment is an image (check for common image extensions)
         if not attachment.filename.lower().endswith(('png', 'jpg', 'jpeg', 'gif')):
-            await ctx.send("The attached file is not a valid image. Please attach a PNG, JPG, JPEG, or GIF file.")
+            await ctx.send("The attached file is not a valid image. Please upload a PNG, JPG, or GIF.")
             return
 
-        # Check if the image size is within the limit (256 KB)
-        if attachment.size > 262144:  # 256 KB in bytes
-            await ctx.send("The image is too large. Please provide an image smaller than 256 KB.")
-            return
-
-        # Download the image
         try:
+            # Fetch the image from the attachment
             image_data = await attachment.read()
+            image_file = io.BytesIO(image_data)
 
-            # Attempt to set the role icon
-            await role.edit(icon=image_data)
+            # Update the role's icon
+            await role.edit(icon=image_file)
             await ctx.send(f"Role icon updated successfully for {role.name}!")
-
+        except discord.Forbidden:
+            await ctx.send("I do not have permission to edit role icons.")
+        except discord.HTTPException as e:
+            await ctx.send(f"An error occurred while updating the role icon: {e}")
         except Exception as e:
-            await ctx.send(f"An error occurred while setting the role icon: {e}")
+            await ctx.send(f"An unexpected error occurred: {e}")
 
-    @set_role_icon.error
-    async def set_role_icon_error(self, ctx, error):
-        if isinstance(error, commands.MissingPermissions):
-            await ctx.send("You need 'Manage Roles' permission to use this command.")
-        elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send("Please specify the role and attach an image.")
+    @setroleicon.error
+    async def setroleicon_error(self, ctx, error):
+        if isinstance(error, commands.MissingRequiredArgument):
+            await ctx.send("You must specify a role to change its icon.")
+        elif isinstance(error, commands.BadArgument):
+            await ctx.send("Please provide a valid role.")
         else:
             await ctx.send(f"An error occurred: {error}")
 
-async def setup(bot):
-    await bot.add_cog(RoleIconManager(bot))
+def setup(bot):
+    bot.add_cog(RoleIconCog(bot))
