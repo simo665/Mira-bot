@@ -9,7 +9,7 @@ class RoleIconManager(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name="set_role_icon")
+    @commands.command(name="ricon")
     @commands.has_permissions(manage_roles=True)
     async def set_role_icon(self, ctx, role: discord.Role, icon_url: str):
         """Set a role icon using an image URL.
