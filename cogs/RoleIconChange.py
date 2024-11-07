@@ -1,19 +1,22 @@
 import discord
 from discord.ext import commands
 import aiohttp
+from io import BytesIO
+from PIL import Image
+import requests
 
 class RoleIconManager(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name="ricon")
+    @commands.command(name="set_role_icon")
     @commands.has_permissions(manage_roles=True)
     async def set_role_icon(self, ctx, role: discord.Role, icon_url: str):
-        """Set a role icon using an image URL or emoji.
+        """Set a role icon using an image URL.
         
         Args:
             role (discord.Role): The role to update.
-            icon_url (str): URL of the image or emoji to set as the icon.
+            icon_url (str): URL of the image to set as the icon.
         """
         # Check if the server meets the required boost level
         if ctx.guild.premium_tier < 2:
@@ -32,6 +35,20 @@ class RoleIconManager(commands.Cog):
                     async with session.get(icon_url) as response:
                         if response.status == 200:
                             image_data = await response.read()
+
+                            # Check the image size (should be below 256 KB)
+                            if len(image_data) > 256 * 1024:
+                                await ctx.send("The image is too large. Please use an image under 256 KB.")
+                                return
+
+                            # Check the image dimensions using PIL
+                            image = Image.open(BytesIO(image_data))
+                            width, height = image.size
+                            if width > 512 or height > 512:
+                                await ctx.send("The image dimensions are too large. Please use an image with dimensions of 512x512 or smaller.")
+                                return
+
+                            # If the image is valid, set it as the role's icon
                             await role.edit(icon=image_data)
                             await ctx.send(f"Role icon updated for {role.name} successfully!")
                         else:
@@ -39,23 +56,12 @@ class RoleIconManager(commands.Cog):
             except Exception as e:
                 await ctx.send(f"An error occurred while setting the role icon: {e}")
 
-        else:  # If an emoji is provided
-            try:
-                emoji = await commands.EmojiConverter().convert(ctx, icon_url)
-                if isinstance(emoji, discord.Emoji):  # Check if it's a custom emoji
-                    await role.edit(icon=emoji.url)
-                    await ctx.send(f"Role icon updated for {role.name} successfully with emoji!")
-                else:
-                    await ctx.send("Only custom emojis can be used as role icons.")
-            except commands.errors.BadArgument:
-                await ctx.send("Invalid emoji or URL. Please provide a valid image URL or custom emoji.")
-
     @set_role_icon.error
     async def set_role_icon_error(self, ctx, error):
         if isinstance(error, commands.MissingPermissions):
             await ctx.send("You need 'Manage Roles' permission to use this command.")
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send("Please specify both the role and an icon URL or emoji.")
+            await ctx.send("Please specify both the role and an image URL.")
         else:
             await ctx.send(f"An error occurred: {error}")
 
