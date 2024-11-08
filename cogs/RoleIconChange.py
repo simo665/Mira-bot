@@ -46,5 +46,5 @@ class RoleIconCog(commands.Cog):
         else:
             await ctx.send(f"An error occurred: {error}")
 
-def setup(bot):
-    bot.add_cog(RoleIconCog(bot))
+async def setup(bot):
+    await bot.add_cog(RoleIconCog(bot))
