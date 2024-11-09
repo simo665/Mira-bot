@@ -58,19 +58,5 @@ class MultiChannelAutoThread(commands.Cog):
         if first_message:
             await thread.send(first_message)
 
-        # Track the thread to delete it if the original message is deleted
-        self.thread_channels[str(message.id)] = thread.id
-        self.save_config()
-
-    @commands.Cog.listener()
-    async def on_message_delete(self, message):
-        """Deletes the thread if the original message is deleted."""
-        thread_id = self.thread_channels.pop(str(message.id), None)
-        if thread_id:
-            thread = self.bot.get_channel(thread_id)
-            if thread:
-                await thread.delete()
-            self.save_config()  # Update the config to remove the deleted thread
-
 async def setup(bot):
     await bot.add_cog(MultiChannelAutoThread(bot))
