@@ -7,7 +7,7 @@ class StickyMessage(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.sticky_messages = {}
-        self.file_path = "user/sticky/sticky_messages.txt"
+        self.file_path = "user/sticky/sticky_messages.json"
         self.load_sticky_messages()
 
     def load_sticky_messages(self):
