@@ -7,7 +7,7 @@ import os
 class MultiChannelAutoThread(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.config_file = "user/auto_thread_config.json"
+        self.config_file = "user/threads/auto_thread_config.json"
         self.thread_channels = {}  # Dictionary to store channel settings
         self.load_config()
 
