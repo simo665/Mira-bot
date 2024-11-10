@@ -45,8 +45,6 @@ class AutoDelete(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        # Ignore bot messages and check if the channel is in the auto-delete list
-
         channel_id = str(message.channel.id)
         if channel_id in self.delete_channels:
             delay = self.delete_channels[channel_id]
