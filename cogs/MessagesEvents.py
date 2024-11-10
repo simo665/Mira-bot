@@ -50,7 +50,7 @@ class MessagesEvents(commands.Cog):
 
 #_____________________________________________
     
-   @commands.has_permissions(manage_messages=true)
+    @commands.has_permissions(manage_messages=true)
     async def send(self, ctx, channel: discord.TextChannel, *, message: str=None):
         if not message:
             await ctx.send("Please include a message to use this command.")
