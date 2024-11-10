@@ -49,7 +49,7 @@ class MessagesEvents(commands.Cog):
                 await message.channel.send("<@&1282336485596467242>, please assist with this. Take a moment to catch up on the conversation to understand the situation fully.")
 
 #_____________________________________________
-    
+    @commands.command()
     @commands.has_permissions(manage_messages=True)
     async def send(self, ctx, channel: discord.TextChannel, *, message: str=None):
         if not message:
