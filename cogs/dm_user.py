@@ -21,7 +21,7 @@ class DMConversation(commands.Cog):
         self.inactivity_times[ctx.author.id] = asyncio.get_event_loop().time()  # Record current time for timeout tracking
 
         await ctx.send(f"Conversation started with {user.name}.")
-        await user.send(f"{ctx.author.name} has started a conversation with you. You can now reply here.")
+        await user.send(f"{ctx.author.display_name} has started a conversation with you. You can now reply here.\n-# User id: {ctx.author.id}")
 
     @commands.command()
     async def close_dm(self, ctx):
@@ -32,7 +32,7 @@ class DMConversation(commands.Cog):
             # Notify both users
             user = self.bot.get_user(user_id)
             if user:
-                await user.send(f"{ctx.author.name} has ended the conversation.")
+                await user.send(f"{ctx.author.display_name} has ended the conversation.")
             await ctx.send(f"Conversation with {user.name if user else 'user'} has been closed.")
 
             # Remove both users from active conversation tracking
@@ -51,7 +51,7 @@ class DMConversation(commands.Cog):
             recipient = self.bot.get_user(recipient_id)
             if recipient:
                 try:
-                    await recipient.send(f"{message.author.name}: {message.content}")
+                    await recipient.send(f"**{message.author.display_name}:** {message.content}\n-# [Report user](https://discord.com/channels/1264302631174668299/1264350097118859294/1276088742414647417)")
                     self.inactivity_times[message.author.id] = asyncio.get_event_loop().time()  # Reset inactivity timer
                 except discord.HTTPException:
                     await message.channel.send("Failed to forward the message.")
