@@ -31,7 +31,7 @@ class MessagesEvents(commands.Cog):
 
     @commands.command()
     @commands.has_permissions(manage_messages=True)
-    async def send(self, ctx, channel: discord.TextChannel = None, *, message: str = None):
+    async def send(self, ctx, channel: discord.TextChannel = None, *, message: str):
         """Send a message to a specific channel or the current channel if none is specified."""
         if not message:
             await ctx.send("Please include a message to use this command.")
