@@ -9,36 +9,75 @@ class DMConversation(commands.Cog):
         self.bot = bot
         self.active_conversations = {}  # Tracks active conversations between users
         self.inactivity_times = {}  # Tracks last activity time for conversations
-        self.blocked_users = self.load_blocked_users()  # Load blocked users from the JSON file
+        self.used_dm_users = self.load_used_dm_users()  # Load users who have used DM feature
+        self.blocked_users = self.load_blocked_users()  # Load blocked users
 
-    def load_blocked_users(self):
-        """Load the list of blocked users from the JSON file."""
+    def load_used_dm_users(self):
+        """Loads users who have already used the DM feature."""
         if os.path.exists('user/dms_config.json'):
-            with open('user/dms_config.json', 'r') as file:
-                return json.load(file)
+            with open('user/dms_config.json', 'r') as f:
+                data = json.load(f)
+                return data.get("used_dm_users", {})
         return {}
 
-    def save_blocked_users(self):
-        """Save the blocked users list to the JSON file."""
-        with open('user/dms_config.json', 'w') as file:
-            json.dump(self.blocked_users, file, indent=4)
+    def load_blocked_users(self):
+        """Loads blocked users from the JSON file."""
+        if os.path.exists('user/dms_config.json'):
+            with open('user/dms_config.json', 'r') as f:
+                data = json.load(f)
+                return data.get("blocked_users", {})
+        return {}
+
+    def save_data(self):
+        """Saves the DM users and blocked users data to the JSON file."""
+        data = {
+            "used_dm_users": self.used_dm_users,
+            "blocked_users": self.blocked_users
+        }
+        with open('user/dms_config.json', 'w') as f:
+            json.dump(data, f)
 
     @commands.command()
     async def start_dm(self, ctx, user: discord.User):
         """Starts a DM conversation with another user via the bot."""
-        # Check if either user is blocked
+        
+        # Check if the users are blocking each other
         if ctx.author.id in self.blocked_users.get(user.id, []):
-            await ctx.send(f"You have blocked {user.name} and cannot start a DM with them.")
-            return
-        if user.id in self.blocked_users.get(ctx.author.id, []):
             await ctx.send(f"You are blocked by {user.name} and cannot start a DM with them.")
             return
+        if user.id in self.blocked_users.get(ctx.author.id, []):
+            await ctx.send(f"You have blocked {user.name}. Unblock them to start a conversation.")
+            return
 
+        # Ensure users are not already in active conversations
         if ctx.author.id in self.active_conversations or user.id in self.active_conversations:
             await ctx.send("Either you or the selected user is already in an active conversation. End it before starting a new one.")
             return
+        
+        # If the user hasn't used the DM feature before, show the rules
+        if ctx.author.id not in self.used_dm_users:
+            embed = discord.Embed(
+                title="⚠️ **DM Conversation Rules** ⚠️",
+                description=(
+                    "1. **Respect privacy**—no harassment or stalking.\n"
+                    "2. **No spamming** or excessive messaging.\n"
+                    "3. **Keep it respectful**—no bullying or inappropriate behavior.\n"
+                    "4. **No threats or abusive language**.\n"
+                    "5. **No unsolicited advertising**.\n"
+                    "6. **Ensure both users consent** to a conversation.\n"
+                    "7. **Do not impersonate others**.\n"
+                    "8. **Avoid sharing sensitive personal information**.\n"
+                    "9. **Conversations will end** after 5 minutes of inactivity.\n"
+                    "10. **Report any misuse** to server staff.\n\n"
+                    "🚫 Violating these rules may result in suspension or banning from this feature."
+                ),
+                color=discord.Color.orange()
+            )
+            await ctx.send(embed=embed)
+            self.used_dm_users[ctx.author.id] = True
+            self.save_data()
 
-        # Initiate conversation
+        # Initiate the conversation
         self.active_conversations[ctx.author.id] = user.id
         self.active_conversations[user.id] = ctx.author.id
         self.inactivity_times[ctx.author.id] = asyncio.get_event_loop().time()  # Record current time for timeout tracking
@@ -68,48 +107,29 @@ class DMConversation(commands.Cog):
 
     @commands.command()
     async def block(self, ctx, user: discord.User):
-        """Blocks a user from starting a DM conversation."""
-        # Make sure the user is not trying to block themselves
-        if ctx.author.id == user.id:
+        """Blocks a user from starting a DM with the command issuer."""
+        if user.id == ctx.author.id:
             await ctx.send("You cannot block yourself.")
             return
+        
+        self.blocked_users.setdefault(ctx.author.id, []).append(user.id)
+        self.save_data()
 
-        # Block the user (corrected logic here)
-        if user.id not in self.blocked_users:
-            self.blocked_users[user.id] = []
-
-        if ctx.author.id not in self.blocked_users[user.id]:
-            self.blocked_users[user.id].append(ctx.author.id)  # User1 is added to User2's block list
-            self.save_blocked_users()
-            await ctx.send(f"You have blocked {user.name}. They can no longer start a DM with you.")
-            
-            # If there is an active conversation with the blocked user, close it
-            if user.id in self.active_conversations and self.active_conversations[user.id] == ctx.author.id:
-                await self.close_dm(ctx)
-            if ctx.author.id in self.active_conversations and self.active_conversations[ctx.author.id] == user.id:
-                # Notify the other user that the conversation is closed due to blocking
-                blocked_user = self.bot.get_user(user.id)
-                if blocked_user:
-                    await blocked_user.send(f"You have been blocked by {ctx.author.name}. The conversation has been closed.")
-                await self.close_dm(ctx)
-        else:
-            await ctx.send(f"You have already blocked {user.name}.")
+        # Close active DM if there's one
+        if user.id in self.active_conversations.get(ctx.author.id, []):
+            await self.close_dm(ctx)
+        
+        await ctx.send(f"You have blocked {user.name}. They will no longer be able to start a DM with you.")
 
     @commands.command()
     async def unblock(self, ctx, user: discord.User):
-        """Unblocks a user and allows them to start a DM conversation again."""
-        # Make sure the user is not trying to unblock themselves
-        if ctx.author.id == user.id:
-            await ctx.send("You cannot unblock yourself.")
-            return
-
-        # Unblock the user
-        if user.id in self.blocked_users and ctx.author.id in self.blocked_users[user.id]:
-            self.blocked_users[user.id].remove(ctx.author.id)
-            self.save_blocked_users()
+        """Unblocks a user, allowing them to start a DM with the command issuer."""
+        if user.id in self.blocked_users.get(ctx.author.id, []):
+            self.blocked_users[ctx.author.id].remove(user.id)
+            self.save_data()
             await ctx.send(f"You have unblocked {user.name}. They can now start a DM with you.")
         else:
-            await ctx.send(f"You have not blocked {user.name}.")
+            await ctx.send(f"{user.name} is not in your block list.")
 
     @commands.Cog.listener()
     async def on_message(self, message):
