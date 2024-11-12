@@ -130,23 +130,7 @@ Actions available:
             self.save_blocked_users()
             await ctx.send(f"{user.display_name} has been unblocked.")
         else:
-           await ctx.send(f"{user.display_name} was not blocked.")
-
-    def save_conversation(self, message):
-        # Saving both users' conversations in the same file.
-        conversation_path = f'user/dms/{message.author.id}_conversation.txt'
-        if not os.path.exists(os.path.dirname(conversation_path)):
-            os.makedirs(os.path.dirname(conversation_path))
-
-        with open(conversation_path, 'a') as file:
-            recipient_id = self.active_conversations[message.author.id]
-            recipient = self.bot.get_user(recipient_id)
-            # Save both user1 and user2's messages in the same file.
-            file.write(f"{message.author.name}: {message.content}\n")
-            if recipient:
-                file.write(f"{recipient.name}: {message.content}\n")
-    
-
+            await ctx.send(f"{user.display_name} was not blocked.")
 
     @commands.command()
     async def report(self, ctx, user: discord.User = None):
@@ -159,29 +143,32 @@ Actions available:
             else:
                 await ctx.send("Please specify a user to report or ensure you have an active conversation.")
                 return
+            
 
-        # Check if conversation files for both users exist.
-        user1_conversation_path = f'user/dms/{ctx.author.id}_conversation.txt'
-        user2_conversation_path = f'user/dms/{user.id}_conversation.txt'
-    
+        conversation_path_user1 = f'user/dms/{ctx.author.id}.txt'
+        conversation_path_user2 = f'user/dms/{user.id}.txt'
+
         files = []
-    
-        if os.path.exists(user1_conversation_path):
-            with open(user1_conversation_path, 'rb') as f:
-                files.append(discord.File(f, filename=f"{ctx.author.id}_conversation.txt"))
-    
-        if os.path.exists(user2_conversation_path):
-            with open(user2_conversation_path, 'rb') as f:
-                files.append(discord.File(f, filename=f"{user.id}_conversation.txt"))
-    
-        if files:
-            embed = discord.Embed(
-                title="DM Report:",
-                description=f"Reporter: {ctx.author.username}\nReported User: {user.username} ({user.id})",
-                color=discord.Color.red()
-            )
-            channel = self.bot.get_channel(1305958093569392752)
-            await channel.send(embed=embed, files=files)
+
+        # Check if user1's conversation exists and add to files list
+        if os.path.exists(conversation_path_user1):
+            files.append(discord.File(conversation_path_user1, filename=f"{ctx.author.id}_conversation.txt"))
+
+        # Check if user2's conversation exists and add to files list
+        if os.path.exists(conversation_path_user2):
+            files.append(discord.File(conversation_path_user2, filename=f"{user.id}_conversation.txt"))
+
+        # Prepare the embed with the report
+        embed = discord.Embed(
+            title="Dm Report:",
+            description=f"Reporter: {ctx.author.name}\nReported User: {user.name} ({user.id})",
+            color=discord.Color.red()
+        )
+
+        # Send the embed along with the conversation files
+        channel = self.bot.get_channel(1305958093569392752)  # Replace with your channel ID
+        await channel.send(embed=embed, files=files)
+        await ctx.send(f"Your report has been submitted successfully.")
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -189,15 +176,20 @@ Actions available:
             recipient_id = self.active_conversations[message.author.id]
             recipient = self.bot.get_user(recipient_id)
             if recipient:
+                conversation_file_path = f"user/dms/{message.author.id}.txt"
+                with open(conversation_file_path, 'a') as f:
+                    if message.author.id == message.author.id:
+                        f.write(f"{message.author.display_name}: {message.content}\n")
+                    else:
+                        f.write(f"{recipient.display_name}: {message.content}\n")
                 try:
                     await recipient.send(message.content)
                     self.inactivity_times[message.author.id] = asyncio.get_event_loop().time()
-                    self.save_conversation(message)
                 except discord.HTTPException:
                     await message.channel.send("Failed to forward the message.")
             else:
                 await message.channel.send("The user is unavailable.")
-    
+
     @tasks.loop(seconds=60)
     async def check_inactivity(self):
         now = asyncio.get_event_loop().time()
