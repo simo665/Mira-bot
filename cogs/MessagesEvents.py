@@ -30,7 +30,7 @@ class MessagesEvents(commands.Cog):
             await message.channel.send("<@&1282336485596467242>, please assist with this. Take a moment to catch up on the conversation to understand the situation fully.")
 
     @commands.command()
-    @commands.has_permissions(manage_messages=True)
+    #@commands.has_permissions(manage_messages=True)
     async def send(self, ctx, *, message: str):
         """Send a message on the channel"""
         await ctx.send(message)
