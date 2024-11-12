@@ -34,6 +34,21 @@ class DMConversation(commands.Cog):
         with open('user/dms_config.json', 'w') as f:
             json.dump(data, f)
 
+    def get_dm_rules(self):
+        """Returns the DM rules as a string."""
+        return """
+        **Rules:**
+        1. **Respect privacy**—no harassment or stalking.
+        2. **No spamming** or excessive messaging.
+        3. **Keep it respectful**—no bullying or inappropriate behavior.
+        4. **No threats or abusive language**.
+        5. **No unsolicited advertising**.
+        6. **Ensure both users consent** to a conversation.
+        7. **Do not impersonate others**.
+        8. **Avoid sharing sensitive personal information**.
+        9. **Conversations will end** after 5 minutes of inactivity.
+        """
+
     @commands.command()
     async def start_dm(self, ctx, user: discord.User):
         """Starts a DM conversation with another user via the bot."""
@@ -55,19 +70,7 @@ class DMConversation(commands.Cog):
         if ctx.author.id not in self.used_dm_users:
             embed = discord.Embed(
                 title="⚠️ **DM Conversation Rules** ⚠️",
-                description=(
-                    "1. **Respect privacy**—no harassment or stalking.\n"
-                    "2. **No spamming** or excessive messaging.\n"
-                    "3. **Keep it respectful**—no bullying or inappropriate behavior.\n"
-                    "4. **No threats or abusive language**.\n"
-                    "5. **No unsolicited advertising**.\n"
-                    "6. **Ensure both users consent** to a conversation.\n"
-                    "7. **Do not impersonate others**.\n"
-                    "8. **Avoid sharing sensitive personal information**.\n"
-                    "9. **Conversations will end** after 5 minutes of inactivity.\n"
-                    "10. **Report any misuse** to server staff.\n\n"
-                    "🚫 Violating these rules may result in suspension or banning from this feature."
-                ),
+                description=self.get_dm_rules(),
                 color=discord.Color.orange()
             )
             await ctx.send(embed=embed)
@@ -146,33 +149,27 @@ Actions available:
             await ctx.send(f"{user.display_name} was not blocked.")
 
     @commands.command(name="report")
-    async def report(ctx, user: discord.User = None):
-    # Check if user is specified or if there's an active conversation
+    async def report(self, ctx, user: discord.User = None):
+        """Reports a user in an active conversation."""
+        # Check if user is specified or if there's an active conversation
         if user is None:
-            active_conversation = get_active_conversation(ctx.author)
+            active_conversation = self.active_conversations.get(ctx.author.id)
             if active_conversation:
-                user = active_conversation
+                user = self.bot.get_user(active_conversation)
                 # Close the active conversation
-                await close_conversation(ctx.author, user)
+                await self.close_dm(ctx)
                 await ctx.send(f"The conversation with {user.display_name} has been closed.")
             else:
                 await ctx.send("Please specify a user to report or ensure you have an active conversation.")
                 return
 
-    # Send the list of rules and ask if they break one of them
-        rules = """
-        **Rules:**
-        1. **Respect privacy**—no harassment or stalking.
-        2. **No spamming** or excessive messaging.
-        3. **Keep it respectful**—no bullying or inappropriate behavior.
-        4. **No threats or abusive language**.
-        5. **No unsolicited advertising**.
-        6. **Ensure both users consent** to a conversation.
-        7. **Do not impersonate others**.
-        8. **Avoid sharing sensitive personal information**.
-        9. **Conversations will end** after 5 minutes of inactivity.
-        """
-        await ctx.send(f"{ctx.author.mention}, please review our rules and confirm if {user.display_name} broke any of them:\n\n{rules}")
+        # Send the list of rules and ask if they break one of them
+        embed = discord.Embed(
+                title="⚠️ **DM Conversation Rules** ⚠️",
+                description=self.get_dm_rules(),
+                color=discord.Color.orange()
+        )
+        await ctx.send(f"{ctx.author.mention}, please review our rules and confirm if {user.display_name} broke any of them:\n", embed=embed)
 
         # Embed for reporting instructions
         report_embed = discord.Embed(
@@ -186,7 +183,7 @@ Actions available:
             color=discord.Color.red()
         )
         await ctx.send(embed=report_embed)
-    
+
     @commands.Cog.listener()
     async def on_message(self, message):
         """Handles DM forwarding during active conversations."""
@@ -201,6 +198,7 @@ Actions available:
                     await message.channel.send("Failed to forward the message.")
             else:
                 await message.channel.send("The user is unavailable.")
+                
 
     @tasks.loop(seconds=60)
     async def check_inactivity(self):
