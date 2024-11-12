@@ -37,16 +37,15 @@ class DMConversation(commands.Cog):
     def get_dm_rules(self):
         """Returns the DM rules as a string."""
         return """
-        **Rules:**
-        1. **Respect privacy**—no harassment or stalking.
-        2. **No spamming** or excessive messaging.
-        3. **Keep it respectful**—no bullying or inappropriate behavior.
-        4. **No threats or abusive language**.
-        5. **No unsolicited advertising**.
-        6. **Ensure both users consent** to a conversation.
-        7. **Do not impersonate others**.
-        8. **Avoid sharing sensitive personal information**.
-        9. **Conversations will end** after 5 minutes of inactivity.
+**Rules:**
+1. **Respect privacy**—no harassment or stalking.
+2. **No spamming** or excessive messaging.
+3. **Keep it respectful**—no bullying or inappropriate behavior.
+4. **No threats or abusive language**.
+5. **No unsolicited advertising**.
+6. **Ensure both users consent** to a conversation.
+7. **Do not impersonate others**.
+8. **Avoid sharing sensitive personal information**.
         """
 
     @commands.command()
