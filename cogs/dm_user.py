@@ -132,7 +132,7 @@ Actions available:
         else:
             await ctx.send(f"{user.display_name} was not blocked.")
 
-    @commands.command()
+    @commands.command(name="report")
     async def report(self, ctx, user: discord.User = None):
         if user is None:
             active_conversation = self.active_conversations.get(ctx.author.id)
@@ -143,33 +143,45 @@ Actions available:
             else:
                 await ctx.send("Please specify a user to report or ensure you have an active conversation.")
                 return
-            
 
-        conversation_path_user1 = f'user/dms/{ctx.author.id}.txt'
-        conversation_path_user2 = f'user/dms/{user.id}.txt'
-
-        files = []
-
-        # Check if user1's conversation exists and add to files list
-        if os.path.exists(conversation_path_user1):
-            files.append(discord.File(conversation_path_user1, filename=f"{ctx.author.id}_conversation.txt"))
-
-        # Check if user2's conversation exists and add to files list
-        if os.path.exists(conversation_path_user2):
-            files.append(discord.File(conversation_path_user2, filename=f"{user.id}_conversation.txt"))
-
-        # Prepare the embed with the report
         embed = discord.Embed(
-            title="Dm Report:",
-            description=f"Reporter: {ctx.author.name}\nReported User: {user.name} ({user.id})",
+                title="⚠️ **DM Conversation Rules** ⚠️",
+                description=self.get_dm_rules(),
+                color=discord.Color.orange()
+        )
+        await ctx.send(f"{ctx.author.mention}, please review our rules and confirm if {user.display_name} broke any of them:\n", embed=embed)
+
+        report_embed = discord.Embed(
+            title=f"To report {user.display_name}",
+            description=(
+                "1. Take screenshots of the conversation.\n"
+                "2. Open a ticket [here](https://discord.com/channels/1264302631174668299/1264350097118859294).\n"
+                f"3. Send the screenshots in the ticket with the user ID: `{user.id}`.\n"
+                "4. Wait for moderators to review your report."
+            ),
             color=discord.Color.red()
         )
+        await ctx.send(embed=report_embed)
 
-        # Send the embed along with the conversation files
-        channel = self.bot.get_channel(1305958093569392752)  # Replace with your channel ID
-        await channel.send(embed=embed, files=files)
-        await ctx.send(f"Your report has been submitted successfully.")
-
+        conversation_file_path = f"user/dms/{user.id}.txt"
+        conversation_file_path_reporter = f"user/dms/{ctx.author.id}.txt"
+        if os.path.exists(conversation_file_path):
+            with open(conversation_file_path, 'rb') as f:
+                channel = self.bot.get_channel(1305958093569392752)
+                await channel.send(
+                    embed=discord.Embed(
+                        title="Dm Report:",
+                        description=f"Reporter: {ctx.author.name}\nReported user: {user.name} ({user.id})",
+                        color=discord.Color.red()
+                    ),
+                    file=discord.File(f, f"{user.id}_conversation.txt")
+                )
+        await asyncio.sleep(1)
+        if os.path.exists(conversation_file_path_reporter):
+            with open(conversation_file_path_reporter, 'rb') as f:
+                channel = self.bot.get_channel(1305958093569392752)
+                await channel.send(f"Reporter {ctx.author.name} messages", file=discord.File(f, f"{ctx.author.id}_conversation.txt"))
+                
     @commands.Cog.listener()
     async def on_message(self, message):
         if isinstance(message.channel, discord.DMChannel) and message.author.id in self.active_conversations:
