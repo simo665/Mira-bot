@@ -36,9 +36,10 @@ class MessagesEvents(commands.Cog):
         if not message:
             await ctx.send("Please include a message to use this command.")
             return
-
-        target_channel = channel or ctx.channel  # Use the specified channel or fallback to current
-        await target_channel.send(message)
+        if not channel:
+            await ctx.send(message)
+        elif channel:
+            await channel.send(message)
 
         # Delete the command message after sending
         await ctx.message.delete()
