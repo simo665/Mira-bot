@@ -145,6 +145,45 @@ Actions available:
         else:
             await ctx.send(f"{user.display_name} was not blocked.")
 
+    @bot.command(name="report")
+    async def report(ctx, user: discord.User = None):
+    # Check if user is specified or if there's an active conversation
+        if user is None:
+            active_conversation = get_active_conversation(ctx.author)
+            if active_conversation:
+                user = active_conversation
+            else:
+                await ctx.send("Please specify a user to report or ensure you have an active conversation.")
+                return
+
+    # Send the list of rules and ask if they break one of them
+        rules = """
+        **Rules:**
+        1. **Respect privacy**—no harassment or stalking.
+        2. **No spamming** or excessive messaging.
+        3. **Keep it respectful**—no bullying or inappropriate behavior.
+        4. **No threats or abusive language**.
+        5. **No unsolicited advertising**.
+        6. **Ensure both users consent** to a conversation.
+        7. **Do not impersonate others**.
+        8. **Avoid sharing sensitive personal information**.
+        9. **Conversations will end** after 5 minutes of inactivity.
+        """
+        await ctx.send(f"{ctx.author.mention}, please review our rules and confirm if {user.display_name} broke any of them:\n\n{rules}")
+
+        # Embed for reporting instructions
+        report_embed = discord.Embed(
+            title=f"To report {user.display_name}",
+            description=(
+                "1. Take screenshots of the conversation.\n"
+                "2. Open a ticket [here](https://discord.com/channels/1264302631174668299/1264350097118859294).\n"
+                f"3. Send the screenshots in the ticket with the user ID: `{user.id}`.\n"
+                "4. Wait for moderators to review your report."
+            ),
+            color=discord.Color.red()
+        )
+        await ctx.send(embed=report_embed)
+    
     @commands.Cog.listener()
     async def on_message(self, message):
         """Handles DM forwarding during active conversations."""
