@@ -145,7 +145,7 @@ Actions available:
         else:
             await ctx.send(f"{user.display_name} was not blocked.")
 
-    @bot.command(name="report")
+    @commands.command(name="report")
     async def report(ctx, user: discord.User = None):
     # Check if user is specified or if there's an active conversation
         if user is None:
