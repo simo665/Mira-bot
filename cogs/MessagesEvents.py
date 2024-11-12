@@ -31,9 +31,9 @@ class MessagesEvents(commands.Cog):
 
     @commands.command()
     @commands.has_permissions(manage_messages=True)
-    async def send(self, ctx, channel: discord.TextChannel = None, *, message: str):
+    async def send(self, ctx, Channel: discord.TextChannel = None, *, message: str):
         """Send a message to a specific channel or the current channel if none is specified."""
-        target_channel = channel or ctx.channel
+        target_channel = Channel or ctx.channel
         await target_channel.send(message)
         # Delete the command message after sending
         await ctx.message.delete()
