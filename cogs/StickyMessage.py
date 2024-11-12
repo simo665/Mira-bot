@@ -16,16 +16,13 @@ class StickyMessage(commands.Cog):
         if not os.path.exists("user/sticky"):
             os.makedirs("user/sticky")
 
-        # Ensure the file exists, and if not, initialize an empty dictionary
         if os.path.isfile(self.file_path):
             try:
                 with open(self.file_path, "r") as file:
                     self.sticky_messages = json.load(file)
             except json.JSONDecodeError:
-                # Handle case where the file is empty or corrupted
                 self.sticky_messages = {}
         else:
-            # If the file doesn't exist, initialize it with an empty dictionary
             self.sticky_messages = {}
 
     def save_sticky_messages(self):
@@ -35,17 +32,25 @@ class StickyMessage(commands.Cog):
 
     async def send_sticky_messages_on_startup(self):
         """Resend sticky messages on bot startup."""
-        await self.bot.wait_until_ready()  # Ensure the bot is fully ready
+        await self.bot.wait_until_ready()
         for channel_id, message_data in self.sticky_messages.items():
             channel = self.bot.get_channel(int(channel_id))
             if channel:
                 try:
-                    # Send the sticky message and update the message ID
+                    # Check if a sticky message was already sent and delete it if found
+                    sticky_message_id = message_data.get("message_id")
+                    if sticky_message_id:
+                        try:
+                            existing_message = await channel.fetch_message(sticky_message_id)
+                            await existing_message.delete()
+                        except (discord.NotFound, discord.Forbidden):
+                            pass
+
+                    # Send the new sticky message
                     sent_message = await channel.send(message_data["content"])
                     self.sticky_messages[channel_id]["message_id"] = sent_message.id
                 except discord.Forbidden:
                     print(f"Missing permissions to send message in {channel.name}")
-        # Save the updated message IDs after resending
         self.save_sticky_messages()
 
     @commands.Cog.listener()
