@@ -81,12 +81,13 @@ class DMConversation(commands.Cog):
 
         await ctx.send(f"Conversation started with {user.name}.")
         await user.send(f"""
-        {ctx.author.display_name} has started a conversation with you.
-        list of actions you can take:
-        * 1. Block them: just type `m!block`
-        * 2. Report them if they do something really bad: just type `m!report @username` you should block that user before reporting.
-        * 3. Just closing dms with that user: just type `m!close_dm`
-        """)
+{ctx.author.display_name} has started a conversation with you.
+Actions available:
+> * 0. Listen to what they will say.
+> * 1. Block: `m!block`
+> * 2. Report if they misbehave: `m!report @username` (block them first with `!block @username`)
+> * 3. Close this conversation: `m!close_dm` (they can reopen it later)
+""")
 
     @commands.command()
     async def close_dm(self, ctx):
@@ -163,7 +164,7 @@ class DMConversation(commands.Cog):
     async def check_inactivity(self):
         """Checks for inactive conversations and closes them if inactive for over 5 minutes."""
         now = asyncio.get_event_loop().time()
-        timeout_duration = 300
+        timeout_duration = 3600
         to_close = []
 
         for user_id, last_active in self.inactivity_times.items():
