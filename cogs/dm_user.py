@@ -80,7 +80,13 @@ class DMConversation(commands.Cog):
         self.inactivity_times[ctx.author.id] = asyncio.get_event_loop().time()
 
         await ctx.send(f"Conversation started with {user.name}.")
-        await user.send(f"{ctx.author.display_name} has started a conversation with you.")
+        await user.send(f"""
+        {ctx.author.display_name} has started a conversation with you.
+        list of actions you can take:
+        * 1. Block them: just type `m!block`
+        * 2. Report them if they do something really bad: just type `m!report @username` you should block that user before reporting.
+        * 3. Just closing dms with that user: just type `m!close_dm`
+        """)
 
     @commands.command()
     async def close_dm(self, ctx):
@@ -116,7 +122,7 @@ class DMConversation(commands.Cog):
 
         self.blocked_users.setdefault(str(ctx.author.id), []).append(user.id)
         self.save_blocked_users()
-        await ctx.send(f"{user.display_name} has been blocked.")
+        await ctx.send(f"{user.name} has been blocked. `m!unblock @username` to unblock.")
 
         # Close the conversation if blocking an active conversation partner
         if user.id in self.active_conversations and self.active_conversations[user.id] == ctx.author.id:
