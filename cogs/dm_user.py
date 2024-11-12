@@ -166,7 +166,7 @@ Actions available:
         conversation_file_path = f"user/dms/{user.id}.txt"
         conversation_file_path_reporter = f"user/dms/{ctx.author.id}.txt"
         if os.path.exists(conversation_file_path):
-            with open(conversation_file_path, 'rb', encoding='utf-8') as f:
+            with open(conversation_file_path, 'rb') as f:
                 channel = self.bot.get_channel(1305958093569392752)
                 await channel.send(
                     embed=discord.Embed(
@@ -178,7 +178,7 @@ Actions available:
                 )
         await asyncio.sleep(1)
         if os.path.exists(conversation_file_path_reporter):
-            with open(conversation_file_path_reporter, 'rb', encoding='utf-8') as f:
+            with open(conversation_file_path_reporter, 'rb') as f:
                 channel = self.bot.get_channel(1305958093569392752)
                 await channel.send(f"Reporter {ctx.author.name} messages", file=discord.File(f, f"{ctx.author.id}_conversation.txt"))
                 
@@ -189,7 +189,7 @@ Actions available:
             recipient = self.bot.get_user(recipient_id)
             if recipient:
                 conversation_file_path = f"user/dms/{message.author.id}.txt"
-                with open(conversation_file_path, 'a') as f:
+                with open(conversation_file_path, 'a', encoding='utf-8') as f:
                     if message.author.id == message.author.id:
                         f.write(f"{message.author.display_name}: {message.content}\n")
                     else:
