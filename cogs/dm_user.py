@@ -177,8 +177,8 @@ Actions available:
                     file=discord.File(f, f"{user.id}_conversation.txt")
                 )
         await asyncio.sleep(1)
-        if os.path.exists(conversation_file_path_reporter, encoding='utf-8'):
-            with open(conversation_file_path_reporter, 'rb') as f:
+        if os.path.exists(conversation_file_path_reporter):
+            with open(conversation_file_path_reporter, 'rb', encoding='utf-8') as f:
                 channel = self.bot.get_channel(1305958093569392752)
                 await channel.send(f"Reporter {ctx.author.name} messages", file=discord.File(f, f"{ctx.author.id}_conversation.txt"))
                 
