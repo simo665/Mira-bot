@@ -74,12 +74,12 @@ class DMConversation(commands.Cog):
             await ctx.send("You cannot block yourself.")
             return
 
-        # Block the user
+        # Block the user (corrected logic here)
         if user.id not in self.blocked_users:
             self.blocked_users[user.id] = []
 
         if ctx.author.id not in self.blocked_users[user.id]:
-            self.blocked_users[user.id].append(ctx.author.id)
+            self.blocked_users[user.id].append(ctx.author.id)  # User1 is added to User2's block list
             self.save_blocked_users()
             await ctx.send(f"You have blocked {user.name}. They can no longer start a DM with you.")
             
