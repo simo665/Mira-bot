@@ -46,6 +46,8 @@ class DMConversation(commands.Cog):
 6. **Ensure both users consent** to a conversation.
 7. **Do not impersonate others**.
 8. **Avoid sharing sensitive personal information**.
+9. **No advertising.**.
+
         """
 
     @commands.command()
