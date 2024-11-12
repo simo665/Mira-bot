@@ -85,7 +85,7 @@ class DMConversation(commands.Cog):
 Actions available:
 > * 0. Listen to what they will say.
 > * 1. Block: `m!block`
-> * 2. Report if they misbehave: `m!report @username` (block them first with `!block @username`)
+> * 2. Report if they misbehave: `m!report` (If it's a server advertising report immediately!)
 > * 3. Close this conversation: `m!close_dm` (they can reopen it later)
 """)
 
@@ -152,6 +152,9 @@ Actions available:
             active_conversation = get_active_conversation(ctx.author)
             if active_conversation:
                 user = active_conversation
+                # Close the active conversation
+                await close_conversation(ctx.author, user)
+                await ctx.send(f"The conversation with {user.display_name} has been closed.")
             else:
                 await ctx.send("Please specify a user to report or ensure you have an active conversation.")
                 return
