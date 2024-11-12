@@ -27,11 +27,11 @@ class DMConversation(commands.Cog):
     async def start_dm(self, ctx, user: discord.User):
         """Starts a DM conversation with another user via the bot."""
         # Check if either user is blocked
-        if user.id in self.blocked_users.get(user.id, []):
-            await ctx.send(f"You are blocked by {user.name} and cannot start a DM with them.")
-            return
-        if ctx.author.id in self.blocked_users.get(ctx.author.id, []):
+        if ctx.author.id in self.blocked_users.get(user.id, []):
             await ctx.send(f"You have blocked {user.name} and cannot start a DM with them.")
+            return
+        if user.id in self.blocked_users.get(ctx.author.id, []):
+            await ctx.send(f"You are blocked by {user.name} and cannot start a DM with them.")
             return
 
         if ctx.author.id in self.active_conversations or user.id in self.active_conversations:
