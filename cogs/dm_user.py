@@ -1,27 +1,67 @@
 import discord
 from discord.ext import commands, tasks
 import asyncio
+import json
+import os
 
 class DMConversation(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.active_conversations = {}  # Tracks active conversations between users
         self.inactivity_times = {}  # Tracks last activity time for conversations
+        self.used_dm_users = self.load_used_dm_users()  # Load users who have used DM feature
+
+    def load_used_dm_users(self):
+        """Loads users who have already used the DM feature."""
+        if os.path.exists('user/dms_config.json'):
+            with open('user/dms_config.json', 'r') as f:
+                return json.load(f)
+        return {}
+
+    def save_used_dm_users(self):
+        """Saves the list of users who have used the DM feature."""
+        with open('user/dms_config.json', 'w') as f:
+            json.dump(self.used_dm_users, f)
 
     @commands.command()
     async def start_dm(self, ctx, user: discord.User):
         """Starts a DM conversation with another user via the bot."""
+        
+        # Ensure users are not already in active conversations
         if ctx.author.id in self.active_conversations or user.id in self.active_conversations:
             await ctx.send("Either you or the selected user is already in an active conversation. End it before starting a new one.")
             return
+        
+        # If the user hasn't used the DM feature before, show the rules
+        if ctx.author.id not in self.used_dm_users:
+            embed = discord.Embed(
+                title="⚠️ **DM Conversation Rules** ⚠️",
+                description=(
+                    "1. **Respect privacy**—no harassment or stalking.\n"
+                    "2. **No spamming** or excessive messaging.\n"
+                    "3. **Keep it respectful**—no bullying or inappropriate behavior.\n"
+                    "4. **No threats or abusive language**.\n"
+                    "5. **No unsolicited advertising**.\n"
+                    "6. **Ensure both users consent** to a conversation.\n"
+                    "7. **Do not impersonate others**.\n"
+                    "8. **Avoid sharing sensitive personal information**.\n"
+                    "9. **Conversations will end** after 5 minutes of inactivity.\n"
+                    "10. **Report any misuse** to server staff.\n\n"
+                    "🚫 Violating these rules may result in suspension or banning from this feature."
+                ),
+                color=discord.Color.orange()
+            )
+            await ctx.send(embed=embed)
+            self.used_dm_users[ctx.author.id] = True
+            self.save_used_dm_users()
 
-        # Initiate conversation
+        # Initiate the conversation
         self.active_conversations[ctx.author.id] = user.id
         self.active_conversations[user.id] = ctx.author.id
         self.inactivity_times[ctx.author.id] = asyncio.get_event_loop().time()  # Record current time for timeout tracking
 
         await ctx.send(f"Conversation started with {user.name}.")
-        await user.send(f"{ctx.author.display_name} has started a conversation with you. You can now reply here.\n-# User id: {ctx.author.id}")
+        await user.send(f"{ctx.author.display_name} has started a conversation with you. You can now reply here.\n-# User id: {ctx.author.id}. Click here to [report user](https://discord.com/channels/1264302631174668299/1264350097118859294/1276088742414647417)")
 
     @commands.command()
     async def close_dm(self, ctx):
@@ -51,7 +91,7 @@ class DMConversation(commands.Cog):
             recipient = self.bot.get_user(recipient_id)
             if recipient:
                 try:
-                    await recipient.send(f"**{message.author.display_name}:** {message.content}\n-# [Report user](https://discord.com/channels/1264302631174668299/1264350097118859294/1276088742414647417)")
+                    await recipient.send(f"**{message.author.display_name}:** {message.content}")
                     self.inactivity_times[message.author.id] = asyncio.get_event_loop().time()  # Reset inactivity timer
                 except discord.HTTPException:
                     await message.channel.send("Failed to forward the message.")
