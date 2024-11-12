@@ -31,7 +31,7 @@ class DMConversation(commands.Cog):
             await ctx.send(f"You are blocked by {user.name} and cannot start a DM with them.")
             return
         if user.id in self.blocked_users.get(ctx.author.id, []):
-            await ctx.send(f"You have blocked {user.name} and cannot start a DM with them unless you unblock them.\n unblock command `m!unblock @user`")
+            await ctx.send(f"You have blocked {user.name} and cannot start a DM with them.")
             return
 
         if ctx.author.id in self.active_conversations or user.id in self.active_conversations:
@@ -44,7 +44,7 @@ class DMConversation(commands.Cog):
         self.inactivity_times[ctx.author.id] = asyncio.get_event_loop().time()  # Record current time for timeout tracking
 
         await ctx.send(f"Conversation started with {user.name}.")
-        await user.send(f"{ctx.author.display_name} has started a conversation with you. You can now reply here.\n-# User id: {ctx.author.id}. Click here to [report user](https://discord.com/channels/1264302631174668299/1264350097118859294/1276088742414647417)")
+        await user.send(f"{ctx.author.display_name} has started a conversation with you. You can now reply here.")
 
     @commands.command()
     async def close_dm(self, ctx):
@@ -82,6 +82,16 @@ class DMConversation(commands.Cog):
             self.blocked_users[user.id].append(ctx.author.id)
             self.save_blocked_users()
             await ctx.send(f"You have blocked {user.name}. They can no longer start a DM with you.")
+            
+            # If there is an active conversation with the blocked user, close it
+            if user.id in self.active_conversations and self.active_conversations[user.id] == ctx.author.id:
+                await self.close_dm(ctx)
+            if ctx.author.id in self.active_conversations and self.active_conversations[ctx.author.id] == user.id:
+                # Notify the other user that the conversation is closed due to blocking
+                blocked_user = self.bot.get_user(user.id)
+                if blocked_user:
+                    await blocked_user.send(f"You have been blocked by {ctx.author.name}. The conversation has been closed.")
+                await self.close_dm(ctx)
         else:
             await ctx.send(f"You have already blocked {user.name}.")
 
