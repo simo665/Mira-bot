@@ -165,23 +165,25 @@ Actions available:
 
         conversation_file_path = f"user/dms/{user.id}.txt"
         conversation_file_path_reporter = f"user/dms/{ctx.author.id}.txt"
+        if os.path.exists(conversation_file_path_reporter):
+            with open(conversation_file_path_reporter, 'rb') as f:
+                channel = self.bot.get_channel(1305958093569392752)
+                await channel.send(f"Reporter {ctx.author.name} messages:", file=discord.File(f, f"{ctx.author.id}_conversation.txt"))
+        await asyncio.sleep(1)
         if os.path.exists(conversation_file_path):
             with open(conversation_file_path, 'rb') as f:
                 channel = self.bot.get_channel(1305958093569392752)
-                await channel.send(
-                    embed=discord.Embed(
+                await channel.send(f"The reported {user.name} messages:",
+                        embed=discord.Embed(
                         title="Dm Report:",
                         description=f"Reporter: {ctx.author.name}\nReported user: {user.name} ({user.id})",
                         color=discord.Color.red()
                     ),
                     file=discord.File(f, f"{user.id}_conversation.txt")
                 )
-        await asyncio.sleep(1)
-        if os.path.exists(conversation_file_path_reporter):
-            with open(conversation_file_path_reporter, 'rb') as f:
-                channel = self.bot.get_channel(1305958093569392752)
-                await channel.send(f"Reporter {ctx.author.name} messages", file=discord.File(f, f"{ctx.author.id}_conversation.txt"))
-                
+        
+
+    
     @commands.Cog.listener()
     async def on_message(self, message):
         if isinstance(message.channel, discord.DMChannel) and message.author.id in self.active_conversations:
@@ -191,9 +193,9 @@ Actions available:
                 conversation_file_path = f"user/dms/{message.author.id}.txt"
                 with open(conversation_file_path, 'a', encoding='utf-8') as f:
                     if message.author.id == message.author.id:
-                        f.write(f"{message.author.display_name}: {message.content}\n")
+                        f.write(f"{message.author.name}: {message.content}\n")
                     else:
-                        f.write(f"{recipient.display_name}: {message.content}\n")
+                        f.write(f"{recipient.name}: {message.content}\n")
                 try:
                     await recipient.send(message.content)
                     self.inactivity_times[message.author.id] = asyncio.get_event_loop().time()
