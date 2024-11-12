@@ -79,7 +79,7 @@ Actions available:
 > * 0. Listen to what they will say.
 > * 1. Block: `m!block`
 > * 2. Report if they misbehave: `m!report` (If it's a server advertising report immediately!)
-> * 3. Close this conversation: `m!close_dm` (they can reopen it later)
+> * 3. Close this conversation: `m!close` (they can reopen it later)
 """)
 
     @commands.command()
@@ -115,7 +115,7 @@ Actions available:
         await ctx.send(f"{user.name} has been blocked. `m!unblock @username` to unblock.")
 
         if user.id in self.active_conversations and self.active_conversations[user.id] == ctx.author.id:
-            await self.close_dm(ctx)
+            await self.close(ctx)
 
     @commands.command()
     async def unblock(self, ctx, user: discord.User = None):
@@ -138,7 +138,7 @@ Actions available:
             active_conversation = self.active_conversations.get(ctx.author.id)
             if active_conversation:
                 user = self.bot.get_user(active_conversation)
-                await self.close_dm(ctx)
+                await self.close(ctx)
                 await ctx.send(f"The conversation with {user.display_name} has been closed.")
             else:
                 await ctx.send("Please specify a user to report or ensure you have an active conversation.")
