@@ -51,7 +51,7 @@ class DMConversation(commands.Cog):
         """
 
     @commands.command()
-    async def start_dm(self, ctx, user: discord.User):
+    async def start(self, ctx, user: discord.User):
         """Starts a DM conversation with another user via the bot."""
         
         # Check if the other user has blocked the initiator
@@ -94,7 +94,7 @@ Actions available:
 """)
 
     @commands.command()
-    async def close_dm(self, ctx):
+    async def close(self, ctx):
         """Ends the current DM conversation."""
         user_id = self.active_conversations.get(ctx.author.id)
         
@@ -193,7 +193,7 @@ Actions available:
             recipient = self.bot.get_user(recipient_id)
             if recipient:
                 try:
-                    await recipient.send(f"**{message.author.display_name}:** {message.content}")
+                    await recipient.send({message.content})
                     self.inactivity_times[message.author.id] = asyncio.get_event_loop().time()
                 except discord.HTTPException:
                     await message.channel.send("Failed to forward the message.")
