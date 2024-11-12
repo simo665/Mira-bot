@@ -95,6 +95,7 @@ Actions available:
             del self.active_conversations[ctx.author.id]
             del self.active_conversations[user_id]
             del self.inactivity_times[ctx.author.id]
+            delete_saved_files()
 
         else:
             await ctx.send("You have no active conversations to close.")
@@ -181,6 +182,13 @@ Actions available:
                     ),
                     file=discord.File(f, f"{user.id}_conversation.txt")
                 )
+        delete_saved_files()
+
+    def delete_saved_files():
+        if os.path.exists(conversation_file_path_reporter):
+            os.remove(conversation_file_path_reporter)
+        if os.path.exists(conversation_file_path):
+            os.remove(conversation_file_path)
         
 
     
@@ -227,6 +235,7 @@ Actions available:
                 del self.active_conversations[user_id]
                 del self.active_conversations[recipient_id]
                 del self.inactivity_times[user_id]
+                delete_saved_files()
 
 
     @commands.Cog.listener()
