@@ -127,7 +127,7 @@ Actions available:
             if active_conversation:
                 user = self.bot.get_user(active_conversation)
                 await self.close(ctx)
-                await ctx.send(f"The conversation with {user.display_name} has been closed.")
+                await ctx.send(f"The conversation with the other part has been closed.")
             else:
                 await ctx.send("Please specify a user to report or ensure you have an active conversation.")
                 return
@@ -140,7 +140,7 @@ Actions available:
         await ctx.send(f"{ctx.author.mention}, please review our rules and confirm if they broke any of them:\n", embed=embed)
         await asyncio.sleep(1)
         report_embed = discord.Embed(
-            title=f"To report {user.display_name}",
+            title=f"To report that user:",
             description=(
                 "**Your report submitted successful, but if you want a direct report follow these steps**:\n"
                 "> 1. Take screenshots of the conversation.\n"
@@ -173,10 +173,15 @@ Actions available:
         delete_saved_files()
 
     def delete_saved_files():
-        if os.path.exists(conversation_file_path_reporter):
-            os.remove(conversation_file_path_reporter)
-        if os.path.exists(conversation_file_path):
-            os.remove(conversation_file_path)
+        active_conversation = self.active_conversations.get(ctx.author.id)
+        if active_conversation:
+            user = self.bot.get_user(active_conversation)
+            conversation_file_path = f"user/dms/{user.id}.txt"
+            conversation_file_path_reporter = f"user/dms/{ctx.author.id}.txt"
+            if os.path.exists(conversation_file_path_reporter):
+                os.remove(conversation_file_path_reporter)
+            if os.path.exists(conversation_file_path):
+                os.remove(conversation_file_path)
         
 
     
