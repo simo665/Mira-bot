@@ -74,7 +74,7 @@ class DMConversation(commands.Cog):
 
         await ctx.send(f"Conversation started with {user.name}.")
         await user.send(f"""
-{ctx.author.display_name} has started a conversation with you.
+        Someone has started a conversation with you.
 Actions available:
 > * 0. Listen to what they will say.
 > * 1. Block: `m!block`
@@ -137,7 +137,7 @@ Actions available:
                 description=self.get_dm_rules(),
                 color=discord.Color.orange()
         )
-        await ctx.send(f"{ctx.author.mention}, please review our rules and confirm if {user.display_name} broke any of them:\n", embed=embed, ephemeral=True)
+        await ctx.send(f"{ctx.author.mention}, please review our rules and confirm if they broke any of them:\n", embed=embed)
         await asyncio.sleep(1)
         report_embed = discord.Embed(
             title=f"To report {user.display_name}",
