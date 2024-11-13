@@ -1,5 +1,6 @@
 import discord
-from discord.ext import commands, tasks
+from discord.ext import tasks, commands
+from discord import app_commands
 import asyncio
 import json
 import os
@@ -45,191 +46,115 @@ class DMConversation(commands.Cog):
 9. **No advertising.**
         """
 
-    @commands.command()
-    async def start(self, ctx, user: discord.User):
-        if ctx.author.id in self.blocked_users.get(str(user.id), []):
-            await ctx.send(f"You are blocked by {user.display_name} and cannot start a DM with them.")
+    @app_commands.command(name="start")
+    async def start(self, interaction: discord.Interaction, user: discord.User):
+        if interaction.user.id in self.blocked_users.get(str(user.id), []):
+            await interaction.response.send_message(f"You are blocked by {user.display_name} and cannot start a DM with them.", ephemeral=True)
             return
-        elif user.id in self.blocked_users.get(str(ctx.author.id), []):
-            await ctx.send(f"You have blocked {user.display_name}. Unblock them to start a conversation.")
-            return
-        
-        if ctx.author.id in self.active_conversations or user.id in self.active_conversations:
-            await ctx.send("Either you or the selected user is already in an active conversation. End it before starting a new one.")
+        elif user.id in self.blocked_users.get(str(interaction.user.id), []):
+            await interaction.response.send_message(f"You have blocked {user.display_name}. Unblock them to start a conversation.", ephemeral=True)
             return
         
-        if ctx.author.id not in self.used_dm_users:
+        if interaction.user.id in self.active_conversations or user.id in self.active_conversations:
+            await interaction.response.send_message("Either you or the selected user is already in an active conversation. End it before starting a new one.", ephemeral=True)
+            return
+        
+        if interaction.user.id not in self.used_dm_users:
             embed = discord.Embed(
                 title="⚠️ **DM Conversation Rules** ⚠️",
                 description=self.get_dm_rules(),
                 color=discord.Color.orange()
             )
-            await ctx.send(embed=embed, ephemeral=True)
-            self.used_dm_users[ctx.author.id] = True
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            self.used_dm_users[interaction.user.id] = True
             self.save_blocked_users()
 
-        self.active_conversations[ctx.author.id] = user.id
-        self.active_conversations[user.id] = ctx.author.id
-        self.inactivity_times[ctx.author.id] = asyncio.get_event_loop().time()
+        self.active_conversations[interaction.user.id] = user.id
+        self.active_conversations[user.id] = interaction.user.id
+        self.inactivity_times[interaction.user.id] = asyncio.get_event_loop().time()
 
-        await ctx.send(f"Conversation started with {user.name}.")
+        await interaction.response.send_message(f"Conversation started with {user.name}.", ephemeral=True)
         await user.send(f"""
-{ctx.author.display_name} has started a conversation with you.
+{interaction.user.display_name} has started a conversation with you.
 Actions available:
 > * 0. Listen to what they will say.
-> * 1. Block: `m!block`
-> * 2. Report if they misbehave: `m!report` (If it's a server advertising report immediately!)
-> * 3. Close this conversation: `m!close` (they can reopen it later)
+> * 1. Block: `/block`
+> * 2. Report if they misbehave: `/report`
+> * 3. Close this conversation: `/close`
 """, ephemeral=True)
 
-    @commands.command()
-    async def close(self, ctx):
-        user_id = self.active_conversations.get(ctx.author.id)
+    @app_commands.command(name="close")
+    async def close(self, interaction: discord.Interaction):
+        user_id = self.active_conversations.get(interaction.user.id)
         
         if user_id:
             user = self.bot.get_user(user_id)
             if user:
-                await user.send(f"{ctx.author.display_name} has ended the conversation.")
-            await ctx.send(f"Conversation with {user.name if user else 'user'} has been closed.")
+                await user.send(f"{interaction.user.display_name} has ended the conversation.")
+            await interaction.response.send_message(f"Conversation with {user.name if user else 'user'} has been closed.", ephemeral=True)
 
-            del self.active_conversations[ctx.author.id]
+            del self.active_conversations[interaction.user.id]
             del self.active_conversations[user_id]
-            del self.inactivity_times[ctx.author.id]
-            delete_saved_files()
+            del self.inactivity_times[interaction.user.id]
+            self.delete_saved_files()
 
         else:
-            await ctx.send("You have no active conversations to close.")
+            await interaction.response.send_message("You have no active conversations to close.", ephemeral=True)
 
-    @commands.command()
-    async def block(self, ctx, user: discord.User = None):
-        if user is None and ctx.author.id in self.active_conversations:
-            user = self.bot.get_user(self.active_conversations[ctx.author.id])
+    @app_commands.command(name="block")
+    async def block(self, interaction: discord.Interaction, user: discord.User = None):
+        if user is None and interaction.user.id in self.active_conversations:
+            user = self.bot.get_user(self.active_conversations[interaction.user.id])
         if user is None:
-            await ctx.send("Specify a user to block.")
+            await interaction.response.send_message("Specify a user to block.", ephemeral=True)
             return
-        if user.id == ctx.author.id:
-            await ctx.send("You cannot block yourself.")
+        if user.id == interaction.user.id:
+            await interaction.response.send_message("You cannot block yourself.", ephemeral=True)
             return
 
-        self.blocked_users.setdefault(str(ctx.author.id), []).append(user.id)
+        self.blocked_users.setdefault(str(interaction.user.id), []).append(user.id)
         self.save_blocked_users()
-        await ctx.send(f"They have been blocked successful.")
+        await interaction.response.send_message(f"{user.display_name} has been blocked successfully.", ephemeral=True)
 
-        if user.id in self.active_conversations and self.active_conversations[user.id] == ctx.author.id:
-            await self.close(ctx)
+        if user.id in self.active_conversations and self.active_conversations[user.id] == interaction.user.id:
+            await self.close(interaction)
 
-    
-
-    @commands.command(name="report")
-    async def report(self, ctx, user: discord.User = None):
+    @app_commands.command(name="report")
+    async def report(self, interaction: discord.Interaction, user: discord.User = None):
         if user is None:
-            active_conversation = self.active_conversations.get(ctx.author.id)
+            active_conversation = self.active_conversations.get(interaction.user.id)
             if active_conversation:
                 user = self.bot.get_user(active_conversation)
-                await self.close(ctx)
-                await ctx.send(f"The conversation with {user.display_name} has been closed.")
+                await self.close(interaction)
+                await interaction.response.send_message(f"The conversation with {user.display_name} has been closed.", ephemeral=True)
             else:
-                await ctx.send("Please specify a user to report or ensure you have an active conversation.")
+                await interaction.response.send_message("Please specify a user to report or ensure you have an active conversation.", ephemeral=True)
                 return
 
         embed = discord.Embed(
-                title="⚠️ **DM Conversation Rules** ⚠️",
-                description=self.get_dm_rules(),
-                color=discord.Color.orange()
+            title="⚠️ **DM Conversation Rules** ⚠️",
+            description=self.get_dm_rules(),
+            color=discord.Color.orange()
         )
-        await ctx.send(f"{ctx.author.mention}, please review our rules and confirm if {user.display_name} broke any of them:\n", embed=embed, ephemeral=True)
-        await asyncio.sleep(1)
+        await interaction.response.send_message(f"{interaction.user.mention}, please review our rules and confirm if {user.display_name} broke any of them:", embed=embed, ephemeral=True)
+        
         report_embed = discord.Embed(
             title=f"To report {user.display_name}",
             description=(
-                "**Your report submitted successful, but if you want a direct report follow these steps**:\n"
+                "**Your report submitted successfully. Follow these steps**:\n"
                 "> 1. Take screenshots of the conversation.\n"
-                "> 2. Open a ticket [here](https://discord.com/channels/1264302631174668299/1264350097118859294).\n"
-                f"> 3. Send the screenshots in the ticket.\n"
+                "> 2. Open a ticket.\n"
+                "> 3. Send screenshots in the ticket.\n"
                 "> 4. Wait for moderators to review your report."
             ),
             color=discord.Color.red()
         )
-        await ctx.send(embed=report_embed)
+        await interaction.followup.send(embed=report_embed, ephemeral=True)
 
-        conversation_file_path = f"user/dms/{user.id}.txt"
-        conversation_file_path_reporter = f"user/dms/{ctx.author.id}.txt"
-        if os.path.exists(conversation_file_path_reporter):
-            with open(conversation_file_path_reporter, 'rb') as f:
-                channel = self.bot.get_channel(1305958093569392752)
-                await channel.send(f"Reporter {ctx.author.name} messages:", file=discord.File(f, f"{ctx.author.id}_conversation.txt"))
-        await asyncio.sleep(1)
-        if os.path.exists(conversation_file_path):
-            with open(conversation_file_path, 'rb') as f:
-                channel = self.bot.get_channel(1305958093569392752)
-                await channel.send(f"The reported {user.name} messages:",
-                        embed=discord.Embed(
-                        title="Dm Report:",
-                        description=f"Reporter: {ctx.author.name}\nReported user: {user.name} ({user.id})",
-                        color=discord.Color.red()
-                    ),
-                    file=discord.File(f, f"{user.id}_conversation.txt")
-                )
-        delete_saved_files()
-
-    def delete_saved_files():
-        if os.path.exists(conversation_file_path_reporter):
-            os.remove(conversation_file_path_reporter)
+    def delete_saved_files(self):
+        conversation_file_path = "user/dms/conversation.txt"
         if os.path.exists(conversation_file_path):
             os.remove(conversation_file_path)
-        
-
-    
-    @commands.Cog.listener()
-    async def on_message(self, message):
-        if isinstance(message.channel, discord.DMChannel) and message.author.id in self.active_conversations:
-            recipient_id = self.active_conversations[message.author.id]
-            recipient = self.bot.get_user(recipient_id)
-            if recipient:
-                conversation_file_path = f"user/dms/{message.author.id}.txt"
-                with open(conversation_file_path, 'a', encoding='utf-8') as f:
-                    if message.author.id == message.author.id:
-                        f.write(f"{message.author.name}: {message.content}\n")
-                    else:
-                        f.write(f"{recipient.name}: {message.content}\n")
-                try:
-                    await recipient.send(message.content)
-                    self.inactivity_times[message.author.id] = asyncio.get_event_loop().time()
-                except discord.HTTPException:
-                    await message.channel.send("Failed to forward the message.")
-            else:
-                await message.channel.send("The user is unavailable.")
-
-    @tasks.loop(seconds=60)
-    async def check_inactivity(self):
-        now = asyncio.get_event_loop().time()
-        timeout_duration = 3600
-        to_close = []
-
-        for user_id, last_active in self.inactivity_times.items():
-            if now - last_active > timeout_duration:
-                to_close.append(user_id)
-
-        for user_id in to_close:
-            recipient_id = self.active_conversations.get(user_id)
-            if recipient_id:
-                user = self.bot.get_user(user_id)
-                recipient = self.bot.get_user(recipient_id)
-                if user:
-                    await user.send("Your conversation has been closed due to inactivity.")
-                if recipient:
-                    await recipient.send("Your conversation has been closed due to inactivity.")
-                
-                del self.active_conversations[user_id]
-                del self.active_conversations[recipient_id]
-                del self.inactivity_times[user_id]
-                delete_saved_files()
-
-
-    @commands.Cog.listener()
-    async def on_ready(self):
-        """Starts the inactivity check loop when the bot is ready."""
-        self.check_inactivity.start()
 
 async def setup(bot):
     await bot.add_cog(DMConversation(bot))
