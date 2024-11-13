@@ -42,7 +42,7 @@ class DMConversation(commands.Cog):
 6. **Ensure both users consent** to a conversation.
 7. **Do not impersonate others**.
 8. **Avoid sharing sensitive personal information**.
-9. **No advertising.**.
+9. **No advertising.**
         """
 
     @commands.command()
@@ -64,7 +64,7 @@ class DMConversation(commands.Cog):
                 description=self.get_dm_rules(),
                 color=discord.Color.orange()
             )
-            await ctx.send(embed=embed)
+            await ctx.send(embed=embed, ephemeral=True)
             self.used_dm_users[ctx.author.id] = True
             self.save_blocked_users()
 
@@ -80,7 +80,7 @@ Actions available:
 > * 1. Block: `m!block`
 > * 2. Report if they misbehave: `m!report` (If it's a server advertising report immediately!)
 > * 3. Close this conversation: `m!close` (they can reopen it later)
-""")
+""", ephemeral=True)
 
     @commands.command()
     async def close(self, ctx):
@@ -113,25 +113,12 @@ Actions available:
 
         self.blocked_users.setdefault(str(ctx.author.id), []).append(user.id)
         self.save_blocked_users()
-        await ctx.send(f"{user.name} has been blocked. `m!unblock @username` to unblock.")
+        await ctx.send(f"They have been blocked successful.")
 
         if user.id in self.active_conversations and self.active_conversations[user.id] == ctx.author.id:
             await self.close(ctx)
 
-    @commands.command()
-    async def unblock(self, ctx, user: discord.User = None):
-        if user is None and ctx.author.id in self.active_conversations:
-            user = self.bot.get_user(self.active_conversations[ctx.author.id])
-        if user is None:
-            await ctx.send("Specify a user to unblock.")
-            return
-
-        if str(ctx.author.id) in self.blocked_users and user.id in self.blocked_users[str(ctx.author.id)]:
-            self.blocked_users[str(ctx.author.id)].remove(user.id)
-            self.save_blocked_users()
-            await ctx.send(f"{user.display_name} has been unblocked.")
-        else:
-            await ctx.send(f"{user.display_name} was not blocked.")
+    
 
     @commands.command(name="report")
     async def report(self, ctx, user: discord.User = None):
@@ -150,15 +137,16 @@ Actions available:
                 description=self.get_dm_rules(),
                 color=discord.Color.orange()
         )
-        await ctx.send(f"{ctx.author.mention}, please review our rules and confirm if {user.display_name} broke any of them:\n", embed=embed)
-
+        await ctx.send(f"{ctx.author.mention}, please review our rules and confirm if {user.display_name} broke any of them:\n", embed=embed, ephemeral=True)
+        await asyncio.sleep(1)
         report_embed = discord.Embed(
             title=f"To report {user.display_name}",
             description=(
-                "1. Take screenshots of the conversation.\n"
-                "2. Open a ticket [here](https://discord.com/channels/1264302631174668299/1264350097118859294).\n"
-                f"3. Send the screenshots in the ticket with the user ID: `{user.id}`.\n"
-                "4. Wait for moderators to review your report."
+                "**Your report submitted successful, but if you want a direct report follow these steps**:\n"
+                "> 1. Take screenshots of the conversation.\n"
+                "> 2. Open a ticket [here](https://discord.com/channels/1264302631174668299/1264350097118859294).\n"
+                f"> 3. Send the screenshots in the ticket.\n"
+                "> 4. Wait for moderators to review your report."
             ),
             color=discord.Color.red()
         )
