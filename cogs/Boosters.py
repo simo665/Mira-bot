@@ -6,7 +6,7 @@ import os
 class Boosters(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.boosters_role_id = 1264340179297243279  # The "boosters" role ID
+        self.boosters_role_id = 1306617159857868862 #1264340179297243279  # The "boosters" role ID
         self.channel_id = None  # Channel to send the embed
         self.data_file = 'data.json'  # File to save the channel ID
         self.load_data()
@@ -33,7 +33,7 @@ class Boosters(commands.Cog):
 
         # Perks
         perks = """
-<:02SataniaThumbsUp:1264963006102634547> Boost Perks <:01ZeroTwo_heartlove:1264960807855460363>
+## <:02SataniaThumbsUp:1264963006102634547> Boost Perks <:01ZeroTwo_heartlove:1264960807855460363>
 _ _
 <:02_animegirlpeek:1264992017826713725> **1 Boost:**
 - <:emoji_274:1272175998733123585> **Leveling Boost x30**
@@ -57,7 +57,7 @@ _ _
         """
 
         embed = discord.Embed(title="Boosters and Perks", description=perks, color=discord.Color.blue())
-        embed.add_field(name="Awesome Boosters!!", value="\n".join(boosters) if boosters else "No boosters yet!", inline=False)
+        embed.add_field(name="Awesome Boosters!! <:ahriheart:1304359317050490881>", value="\n<:01ZeroTwo_heartlove:1264960807855460363> ".join(boosters) if boosters else "No boosters yet!", inline=False)
         return embed
 
     @commands.Cog.listener()
