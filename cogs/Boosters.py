@@ -56,7 +56,7 @@ _ _
 
         """
 
-        embed = discord.Embed(title="Boosters and Perks", description=perks, color=discord.Color.from_hex('#ff98f7'))
+        embed = discord.Embed(title="Boosters and Perks", description=perks, color=discord.Color.from_str("#ff98f7"))
         embed.add_field(name="Awesome Boosters!! <:ahriheart:1304359317050490881>", value="\n".join(boosters) if boosters else "No boosters yet!", inline=False)
         return embed
 
