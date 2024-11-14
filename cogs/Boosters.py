@@ -105,5 +105,5 @@ _ _
         """Regularly update the boosters embed."""
         await self.update_embed()
 
-def setup(bot):
-    bot.add_cog(Boosters(bot))
+async def setup(bot):
+    await bot.add_cog(Boosters(bot))
