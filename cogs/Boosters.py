@@ -5,7 +5,7 @@ class Boosters(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.boosters_role_id = 1264340179297243279  # Boosters role ID
-        self.channel_id = None
+        self.channel_id = 1282605759955341365
 
     async def create_boosters_embed(self, guild):
         """Create and return the embed with the list of boosters and the perks."""
