@@ -57,7 +57,7 @@ _ _
         """
 
         embed = discord.Embed(title="Boosters and Perks", description=perks, color=discord.Color.blue())
-        embed.add_field(name="Awesome Boosters!! <:ahriheart:1304359317050490881>", value="\n".join(f"<:01ZeroTwo_heartlove:1264960807855460363> - {boosters}") if boosters else "No boosters yet!", inline=False)
+        embed.add_field(name="Awesome Boosters!! <:ahriheart:1304359317050490881>", value="\n<:01ZeroTwo_heartlove:1264960807855460363> - ".join(boosters) if boosters else "No boosters yet!", inline=False)
         return embed
 
     @commands.Cog.listener()
