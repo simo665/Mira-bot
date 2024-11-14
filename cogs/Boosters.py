@@ -1,61 +1,45 @@
 import discord
 from discord.ext import commands
-import json
-import os
 
 class Boosters(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.boosters_file = "boosters.json"
+        self.boosters_role_id = 1264340179297243279  # Boosters role ID
         self.channel_id = None
-        self.boosters_list = self.load_boosters()
 
-    def load_boosters(self):
-        """Load the boosters from the JSON file."""
-        if os.path.exists(self.boosters_file):
-            with open(self.boosters_file, "r") as f:
-                return json.load(f)
-        return []
-
-    def save_boosters(self):
-        """Save the boosters list to a JSON file."""
-        with open(self.boosters_file, "w") as f:
-            json.dump(self.boosters_list, f)
+    async def create_boosters_embed(self, guild):
+        """Create and return the embed with the list of boosters."""
+        boosters_role = guild.get_role(self.boosters_role_id)
+        if boosters_role:
+            # Get members who have the boosters role
+            boosters_names = [member.name for member in guild.members if boosters_role in member.roles]
+            embed = discord.Embed(title="Boosters", description="\n".join(boosters_names) if boosters_names else "No boosters yet.")
+            return embed
+        return None
 
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
-        """Check if a user boosted the server and update the boosters list."""
-        if before.premium_since != after.premium_since:
-            if after.premium_since:  # Boosted
-                if after.id not in self.boosters_list:
-                    self.boosters_list.append(after.id)
-                    self.save_boosters()
-            else:  # Unboosted
-                if after.id in self.boosters_list:
-                    self.boosters_list.remove(after.id)
-                    self.save_boosters()
+        """Check if a user gained or lost the boosters role and update the boosters list."""
+        # Check if the user gained or lost the boosters role
+        before_boosters = before.get_role(self.boosters_role_id)
+        after_boosters = after.get_role(self.boosters_role_id)
 
-            # Update the embed in the set channel
+        if before_boosters != after_boosters:
             if self.channel_id:
                 channel = self.bot.get_channel(self.channel_id)
                 if channel:
-                    embed = await self.create_boosters_embed()
+                    embed = await self.create_boosters_embed(after.guild)
                     message = await channel.fetch_message(self.channel_id)
                     await message.edit(embed=embed)
 
-    async def create_boosters_embed(self):
-        """Create and return the embed with the list of boosters."""
-        boosters_names = [self.bot.get_user(user_id).name for user_id in self.boosters_list]
-        embed = discord.Embed(title="Boosters", description="\n".join(boosters_names) if boosters_names else "No boosters yet.")
-        return embed
-
-    @commands.command("bchannel")
+    @commands.command()
     async def set_boosters_channel(self, ctx, channel: discord.TextChannel):
         """Command to set the channel where the boosters list will be displayed."""
         self.channel_id = channel.id
-        embed = await self.create_boosters_embed()
-        message = await channel.send(embed=embed)
-        self.channel_id = message.channel.id  # Save the channel ID to update later
+        embed = await self.create_boosters_embed(ctx.guild)
+        if embed:
+            message = await channel.send(embed=embed)
+            self.channel_id = message.channel.id  # Save the channel ID to update later
 
     @commands.command()
     async def test_boosters(self, ctx):
@@ -63,7 +47,7 @@ class Boosters(commands.Cog):
         if self.channel_id:
             channel = self.bot.get_channel(self.channel_id)
             if channel:
-                embed = await self.create_boosters_embed()
+                embed = await self.create_boosters_embed(ctx.guild)
                 message = await channel.fetch_message(self.channel_id)
                 await message.edit(embed=embed)
                 await ctx.send("Boosters embed updated successfully.")
