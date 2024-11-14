@@ -72,5 +72,5 @@ class Boosters(commands.Cog):
         else:
             await ctx.send("The boosters channel has not been set.")
 
-await def setup(bot):
+async def setup(bot):
     await bot.add_cog(Boosters(bot))
