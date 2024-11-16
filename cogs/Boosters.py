@@ -29,7 +29,7 @@ class Boosters(commands.Cog):
         # Get the list of users with the boosters role
         guild = self.bot.get_guild(1264302631174668299)  # Replace with your server ID
         boosters_role = guild.get_role(self.boosters_role_id)
-        boosters = [member.mention for member in guild.members if boosters_role in member.roles]
+        boosters = [f"<a:cat_jumping:1294048140277841920> {member.mention}" for member in guild.members if boosters_role in member.roles]
 
         # Perks
         perks = """
@@ -71,6 +71,7 @@ _ _
             await self.update_embed()
 
     @commands.command()
+    @commands.has_permssion(administrator=True)
     async def bc(self, ctx, channel: discord.TextChannel):
         """Set the channel where the boosters embed will be posted."""
         self.channel_id = channel.id
