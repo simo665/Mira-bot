@@ -71,7 +71,7 @@ _ _
             await self.update_embed()
 
     @commands.command()
-    @commands.has_permssion(administrator=True)
+    @commands.has_permissions(administrator=True)
     async def bc(self, ctx, channel: discord.TextChannel):
         """Set the channel where the boosters embed will be posted."""
         self.channel_id = channel.id
