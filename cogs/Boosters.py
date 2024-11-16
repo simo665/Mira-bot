@@ -29,7 +29,7 @@ class Boosters(commands.Cog):
         # Get the list of users with the boosters role
         guild = self.bot.get_guild(1264302631174668299)  # Replace with your server ID
         boosters_role = guild.get_role(self.boosters_role_id)
-        boosters = [f"* Super thanks for {member.mention} *{member.display_name}* <a:heart:1294048146682417224>" for member in guild.members if boosters_role in member.roles]
+        boosters = [f"* Thanks, **{member.mention}!** <a:heart:1294048146682417224>" for member in guild.members if boosters_role in member.roles]
 
         # Perks
         perks = """
