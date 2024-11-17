@@ -31,7 +31,6 @@ class PerspectiveModeration(commands.Cog):
             return response.json().get("attributeScores", {})
         except requests.exceptions.RequestException as e:
             print(f"Error during API request: {e}")
-            print(self.api_key)  # Check if it prints the correct key
             return {}
             
     @commands.Cog.listener()
