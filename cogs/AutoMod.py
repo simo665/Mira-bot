@@ -17,7 +17,7 @@ class PerspectiveModeration(commands.Cog):
             "IDENTITY_ATTACK": "👤",
             "THREAT": "⚠️",
         }
-
+        
     def analyze_text(self, text):
         url = "https://commentanalyzer.googleapis.com/v1alpha1/comments:analyze"
         payload = {
@@ -26,9 +26,14 @@ class PerspectiveModeration(commands.Cog):
             "requestedAttributes": {key: {} for key in self.emoji_map.keys()},
         }
         params = {"key": self.api_key}
-        response = requests.post(url, params=params, json=payload)
-        return response.json().get("attributeScores", {})
-
+        try:
+            response = requests.post(url, params=params, json=payload)
+            response.raise_for_status()  # Will raise an error for bad responses
+            return response.json().get("attributeScores", {})
+        except requests.exceptions.RequestException as e:
+            print(f"Error during API request: {e}")
+            return {}
+            
     @commands.Cog.listener()
     async def on_message(self, message):
         if not message.guild or message.author.bot:
