@@ -5,7 +5,7 @@ import discord
 # Bot requirements 
 load_dotenv()
 TOKEN=os.getenv('BOT_TOKEN')
-API=os.getenv('Ai_API')
+API=os.getenv('AI_API')
 
 intents = discord.Intents.default()
 intents.members = True 
