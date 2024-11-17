@@ -5,8 +5,8 @@ from discord.ext import commands
 class ServerManager(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.main_guild_ids = [1264302631174668299, 1282315062756769803]  # List of allowed server IDs
-        self.owner_id = 1264251459231416391  # Your Discord user ID (for your personal notifications)
+        self.main_guild_ids = [1264302631174668299, 1282315062756769803, 1307446747869741197]  # List of allowed server IDs
+        self.owner_id = 1298262775000207382  # Your Discord user ID (for your personal notifications)
 
     @commands.Cog.listener()
     async def on_ready(self):
