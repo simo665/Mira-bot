@@ -20,7 +20,7 @@ class PerspectiveModeration(commands.Cog):
             "requestedAttributes": {
                 "TOXICITY": {},
                 "INSULT": {},
-                "IDENTITY_ATTACK": {},
+                "IDENTITY ATTACK": {},
                 "THREAT": {}
             },
         }
@@ -49,7 +49,7 @@ class PerspectiveModeration(commands.Cog):
             if score > 0.8:  # Threshold for deletion
                 self.user_scores[user_id][attribute] += 1
                 await message.delete()
-                await message.channel.send(f"Message deleted for {attribute.lower()}. Please follow the rules.")
+                await message.channel.send(f"{message.author.mention} Message deleted for {attribute.lower()}. Please follow the rules.")
                 
                 # Send a report to the report channel
                 report_channel = message.guild.get_channel(1287362089165262940)  # Report channel ID
