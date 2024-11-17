@@ -11,19 +11,18 @@ class PerspectiveModeration(commands.Cog):
         self.api_key = API
         self.kick_threshold = int(os.getenv("KICK_THRESHOLD", 5))
         self.user_scores = defaultdict(lambda: defaultdict(int))
-        self.emoji_map = {
-            "TOXICITY": "🧨",
-            "INSULT": "👊",
-            "IDENTITY_ATTACK": "👤",
-            "THREAT": "⚠️",
-        }
         
     def analyze_text(self, text):
         url = "https://commentanalyzer.googleapis.com/v1alpha1/comments:analyze"
         payload = {
             "comment": {"text": text},
             "languages": ["en"],
-            "requestedAttributes": {key: {} for key in self.emoji_map.keys()},
+            "requestedAttributes": {
+                "TOXICITY": {},
+                "INSULT": {},
+                "IDENTITY_ATTACK": {},
+                "THREAT": {}
+            },
         }
         params = {"key": self.api_key}
         try:
@@ -49,9 +48,17 @@ class PerspectiveModeration(commands.Cog):
             if score > 0.8:  # Threshold for deletion
                 self.user_scores[user_id][attribute] += 1
                 await message.delete()
-                await message.channel.send(
-                    f"Message deleted for {attribute.lower()}."
+                await message.channel.send(f"Message deleted for {attribute.lower()}. Please follow the rules.")
+                
+                # Send a report to the report channel
+                report_channel = message.guild.get_channel(1287362089165262940)  # Report channel ID
+                embed = discord.Embed(
+                    title="Inappropriate Message Report",
+                    description=f"**User:** {message.author.mention}\n**Message:** {message.content}\n**Type:** {attribute}",
+                    color=discord.Color.red()
                 )
+                await report_channel.send(embed=embed)
+
                 if self.user_scores[user_id]["TOXICITY"] >= self.kick_threshold:
                     should_kick = True
 
