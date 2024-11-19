@@ -30,7 +30,7 @@ class MessagesEvents(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        if message.author == self.bot.user:
+        if message.author.bot:
             return
         
         if any(word in message.content.lower() for word in ("welcome", "wlc")):
