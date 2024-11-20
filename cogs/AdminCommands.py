@@ -117,9 +117,6 @@ class AdminCommands(commands.Cog):
 
 
 
-
-
-
 # Setup function to add the cog to the bot
 async def setup(bot: commands.Bot):
     await bot.add_cog(AdminCommands(bot))
