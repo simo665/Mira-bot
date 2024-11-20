@@ -63,8 +63,8 @@ class AdminCommands(commands.Cog):
             description="This list updates every 15 minutes.",
             color=discord.Color.blue(),
         )
-        embed.add_field(name=f"{wifi_online} Active Mods", value="\n - ".join(active_mods) or "None", inline=False)
-        embed.add_field(name=f"{wifi_offline} Inactive Mods", value="\n - ".join(inactive_mods) or "None", inline=False)
+        embed.add_field(name=f"{self.wifi_online} Active Mods", value="\n - ".join(active_mods) or "None", inline=False)
+        embed.add_field(name=f"{self.wifi_offline} Inactive Mods", value="\n - ".join(inactive_mods) or "None", inline=False)
     
 
         if self.embed_message:
@@ -100,8 +100,8 @@ class AdminCommands(commands.Cog):
             description="This list updates every 15 minutes.",
             color=discord.Color.blue(),
         )
-        embed.add_field(name=f"{wifi_online} Active Mods", value="\n - ".join(active_mods) or "None", inline=False)
-        embed.add_field(name=f"{wifi_offline} Inactive Mods", value="\n - ".join(inactive_mods) or "None", inline=False)
+        embed.add_field(name=f"{self.wifi_online} Active Mods", value="\n - ".join(active_mods) or "None", inline=False)
+        embed.add_field(name=f"{self.wifi_offline} Inactive Mods", value="\n - ".join(inactive_mods) or "None", inline=False)
         # Send the embed and save the message for updates
         self.embed_message = await channel.send(embed=embed)
         await ctx.send("Moderation status embed initialized and updates scheduled!")
