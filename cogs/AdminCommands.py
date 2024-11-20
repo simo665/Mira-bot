@@ -33,7 +33,7 @@ class AdminCommands(commands.Cog):
 
 # _________
 
-    @tasks.loop(minutes=15)
+    @tasks.loop(minutes=1)
     async def update_status_embed(self):
         """Task that updates the status embed every 15 minutes."""
         guild = self.bot.guilds[0]  # Replace with `self.bot.get_guild(ID)` if using multiple guilds
