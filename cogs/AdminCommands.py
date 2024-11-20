@@ -12,6 +12,9 @@ class AdminCommands(commands.Cog):
         self.update_status_embed.start()  # Start the task to update the embed every 15 minutes
         self.wifi_online = "<:WiFi_Online:1308933707255775242>"
         self.wifi_offline = "<:WiFi_Offline:1308933727367336087>"
+        self.online_icon = "<:online:1308942881829945395>"
+        self.dnd_icon = "<:dnd:1308941478554505216>"
+        self.invisible_icon = "<:invisible:1308941489656692807>"
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -32,8 +35,7 @@ class AdminCommands(commands.Cog):
                     await message.channel.send("You do not have permission to make me leave the server.")
 
 # _________
-
-    @tasks.loop(minutes=1)
+    @tasks.loop(minutes=5)
     async def update_status_embed(self):
         """Task that updates the status embed every 15 minutes."""
         guild = self.bot.guilds[0]  # Replace with `self.bot.get_guild(ID)` if using multiple guilds
@@ -48,24 +50,28 @@ class AdminCommands(commands.Cog):
             print(f"Role with ID {self.role_id} not found.")
             return
 
-        active_mods = []
-        inactive_mods = []
+        available_mods = []
+        unavailable_mods = []
 
         for member in role.members:
-            if member.status in (discord.Status.online, discord.Status.idle, discord.Status.dnd):
-                active_mods.append(f"> - {member.display_name}")
+            if member.status == discord.Status.online or member.status == discord.Status.idle:
+                # Online or idle members are considered available
+                available_mods.append(f"{self.online_icon} - {member.display_name}")
+            elif member.status == discord.Status.dnd:
+                # DND members are considered unavailable
+                unavailable_mods.append(f"{self.dnd_icon} - {member.display_name}")
             else:
-                inactive_mods.append(f"> - {member.display_name}")
+                # Offline members
+                unavailable_mods.append(f"{self.invisible_icon} - {member.display_name}")
 
         # Create the embed
         embed = discord.Embed(
             title="Moderation Status",
-            description="This list updates every 15 minutes.",
-            color=discord.Color.blue(),
+            description="This list updates every 5 minutes.",
+            color=discord.Color.green(),
         )
-        embed.add_field(name=f"{self.wifi_online} Active Mods", value="\n".join(active_mods) or "None", inline=False)
-        embed.add_field(name=f"{self.wifi_offline} Inactive Mods", value="\n".join(inactive_mods) or "None", inline=False)
-    
+        embed.add_field(name=f"{self.wifi_online} Available Mods", value="\n".join(available_mods) or "None", inline=False)
+        embed.add_field(name=f"{self.wifi_offline} Unavailable Mods", value="\n".join(unavailable_mods) or "None", inline=False)
 
         if self.embed_message:
             try:
@@ -100,8 +106,8 @@ class AdminCommands(commands.Cog):
             description="This list updates every 15 minutes.",
             color=discord.Color.blue(),
         )
-        embed.add_field(name=f"{self.wifi_online} Active Mods", value="\n".join(active_mods) or "None", inline=False)
-        embed.add_field(name=f"{self.wifi_offline} Inactive Mods", value="\n".join(inactive_mods) or "None", inline=False)
+        embed.add_field(name=f"{self.wifi_online} Available Mods", value="\n".join(active_mods) or "None", inline=False)
+        embed.add_field(name=f"{self.wifi_offline} Unavailable Mods", value="\n".join(inactive_mods) or "None", inline=False)
         # Send the embed and save the message for updates
         self.embed_message = await channel.send(embed=embed)
         await ctx.send("Moderation status embed initialized and updates scheduled!")
