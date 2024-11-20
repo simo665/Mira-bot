@@ -8,6 +8,7 @@ TOKEN=os.getenv('BOT_TOKEN')
 API=os.getenv('AI_API')
 
 intents = discord.Intents.default()
+intents.presences = True 
 intents.members = True 
 intents.message_content = True  
 intents.voice_states = True
