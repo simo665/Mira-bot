@@ -10,6 +10,8 @@ class AdminCommands(commands.Cog):
         self.embed_message = None  # Stores the embed message for updates
         self.channel_id = 1308932001277149204  # Replace with your target channel ID
         self.update_status_embed.start()  # Start the task to update the embed every 15 minutes
+        self.wifi_online = "<:WiFi_Online:1308933707255775242>"
+        self.wifi_offline = "<:WiFi_Offline:1308933727367336087>"
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -61,9 +63,9 @@ class AdminCommands(commands.Cog):
             description="This list updates every 15 minutes.",
             color=discord.Color.blue(),
         )
-        embed.add_field(name="Active Mods", value="\n".join(active_mods) or "None", inline=False)
-        embed.add_field(name="Inactive Mods", value="\n".join(inactive_mods) or "None", inline=False)
-        embed.set_footer(text="Last updated")
+        embed.add_field(name=f"{wifi_online} Active Mods", value="\n - ".join(active_mods) or "None", inline=False)
+        embed.add_field(name=f"{wifi_offline} Inactive Mods", value="\n - ".join(inactive_mods) or "None", inline=False)
+    
 
         if self.embed_message:
             try:
