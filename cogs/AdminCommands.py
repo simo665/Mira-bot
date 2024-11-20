@@ -8,7 +8,7 @@ class AdminCommands(commands.Cog):
         self.owner_id = 1276601420652482643
         self.role_id = 1275849704197853276  # Replace with the role ID
         self.embed_message = None  # Stores the embed message for updates
-        self.channel_id = 1298903550994284566  # Replace with your target channel ID
+        self.channel_id = 1308932001277149204  # Replace with your target channel ID
         self.update_status_embed.start()  # Start the task to update the embed every 15 minutes
 
     @commands.Cog.listener()
