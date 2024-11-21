@@ -76,6 +76,7 @@ class AdminCommands(commands.Cog):
         role = guild.get_role(self.role_id)
         if role and role in after.roles:
             # Update the embed only if the status change is for a relevant member
+            await asyncio.sleep(10)
             await self.update_status_embed(guild)
 
 
