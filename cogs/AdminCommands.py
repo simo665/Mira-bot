@@ -56,14 +56,14 @@ class AdminCommands(commands.Cog):
 
         for member in role.members:
             if member.status == discord.Status.online:
-                available_mods.append(f" {self.online_icon} - {member.mention} *(member.name)*")
+                available_mods.append(f" {self.online_icon} - {member.mention} *({member.name})*")
             elif member.status == discord.Status.dnd:
-                unavailable_mods.append(f" {self.dnd_icon} - {member.mention} *(member.name)*")
+                unavailable_mods.append(f" {self.dnd_icon} - {member.mention} *({member.name})*")
             elif member.status == discord.Status.idle:
-                available_mods.append(f" {self.idle_icon} - {member.mention} *(member.name)*")
+                available_mods.append(f" {self.idle_icon} - {member.mention} *({member.name})*")
             else:
                 # Offline members
-                unavailable_mods.append(f" {self.invisible_icon} - {member.mention} *(member.name)*")
+                unavailable_mods.append(f" {self.invisible_icon} - {member.mention} *({member.name})*")
 
         # Create the embed
         embed = discord.Embed(
