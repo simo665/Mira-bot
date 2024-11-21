@@ -16,6 +16,11 @@ class AdminCommands(commands.Cog):
         self.invisible_icon = "<:invisible:1308941489656692807>"
         self.idle_icon = "<:idle_gray:1308948721207087194>"
 
+    async def on_ready(self):
+        """Check if the embed exists and update it when the bot is ready."""
+        guild = self.bot.guilds[0]  # Assumes the bot is in at least one server
+        await self.update_status_embed(guild)
+
     async def update_status_embed(self, guild):
         """Updates the status embed."""
         role = guild.get_role(self.role_id)
@@ -27,6 +32,13 @@ class AdminCommands(commands.Cog):
         if not channel:
             print(f"Channel with ID {self.channel_id} not found.")
             return
+
+        # Look for an existing embed message
+        if not self.embed_message:
+            async for message in channel.history(limit=10):  # Check last 10 messages
+                if message.embeds:
+                    self.embed_message = message
+                    break
 
         available_mods = []
         unavailable_mods = []
@@ -61,14 +73,6 @@ class AdminCommands(commands.Cog):
         else:
             self.embed_message = await channel.send(embed=embed)
 
-    @commands.command()
-    @commands.has_permissions(administrator=True)
-    async def init_status_embed(self, ctx):
-        """Initialize the embed in the target channel."""
-        guild = ctx.guild
-        await self.update_status_embed(guild)
-        await ctx.send("Moderation status embed initialized and updates scheduled!")
-
     @commands.Cog.listener()
     async def on_presence_update(self, before: discord.Member, after: discord.Member):
         """Listener for member status updates."""
@@ -80,7 +84,7 @@ class AdminCommands(commands.Cog):
 
     async def delayed_update(self, guild):
         """Delays the embed update to avoid rapid status update conflicts."""
-        await asyncio.sleep(10)  # Delay for 10 seconds
+        await asyncio.sleep(5)  # Delay
         await self.update_status_embed(guild)
 
 # Setup function to add the cog to the bot
