@@ -54,9 +54,8 @@ class DynamicSlowMode(commands.Cog):
                 try:
                     # Apply slow mode
                     await channel.edit(slowmode_delay=int(cooldown))
-                 
                 except discord.Forbidden:
-                    print(f"Missing permissions to edit {channel.name}.")
+                    continue 
                 except Exception as e:
                     print(f"Error updating slow mode in {channel.name}: {e}")
 
@@ -64,8 +63,7 @@ class DynamicSlowMode(commands.Cog):
             if idle_time > 5:
                 self.message_count[channel_id] = 0
                 self.user_count[channel_id].clear()
-                print(f"Reset message count in {channel.name} due to inactivity.")
-
+                
     @slow_mode_task.before_loop
     async def before_slow_mode_task(self):
         """Ensure bot is ready before starting the loop."""
