@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-
+import asyncio
 
 class AdminCommands(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -75,10 +75,13 @@ class AdminCommands(commands.Cog):
         guild = after.guild
         role = guild.get_role(self.role_id)
         if role and role in after.roles:
-            # Update the embed only if the status change is for a relevant member
-            await asyncio.sleep(10)
-            await self.update_status_embed(guild)
+            # Schedule the update after a delay using create_task
+            await self.bot.loop.create_task(self.delayed_update(guild))
 
+    async def delayed_update(self, guild):
+        """Delays the embed update to avoid rapid status update conflicts."""
+        await asyncio.sleep(10)  # Delay for 10 seconds
+        await self.update_status_embed(guild)
 
 # Setup function to add the cog to the bot
 async def setup(bot: commands.Bot):
