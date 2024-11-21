@@ -58,7 +58,7 @@ class AdminCommands(commands.Cog):
             if member.status == discord.Status.online:
                 available_mods.append(f"{self.online_icon} - {member.display_name}")
             elif member.status == discord.Status.dnd:
-                available_mods.append(f"{self.dnd_icon} - {member.display_name}")
+                unavailable_mods.append(f"{self.dnd_icon} - {member.display_name}")
             elif member.status == discord.Status.idle:
                 available_mods.append(f"{self.idle_icon} - {member.display_name}")
             else:
