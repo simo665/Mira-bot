@@ -15,7 +15,7 @@ class AdminCommands(commands.Cog):
         self.online_icon = "<:online:1308942881829945395>"
         self.dnd_icon = "<:dnd:1308941478554505216>"
         self.invisible_icon = "<:invisible:1308941489656692807>"
-        self.idle_icon = "<:Idle:1308947018550480936>"
+        self.idle_icon = "<:idle_gray:1308948721207087194>"
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -56,14 +56,14 @@ class AdminCommands(commands.Cog):
 
         for member in role.members:
             if member.status == discord.Status.online:
-                available_mods.append(f"{self.online_icon} - {member.display_name}")
+                available_mods.append(f" {self.online_icon} - {member.mention} *(member.name)*")
             elif member.status == discord.Status.dnd:
-                unavailable_mods.append(f"{self.dnd_icon} - {member.display_name}")
+                unavailable_mods.append(f" {self.dnd_icon} - {member.mention} *(member.name)*")
             elif member.status == discord.Status.idle:
-                available_mods.append(f"{self.idle_icon} - {member.display_name}")
+                available_mods.append(f" {self.idle_icon} - {member.mention} *(member.name)*")
             else:
                 # Offline members
-                unavailable_mods.append(f"{self.invisible_icon} - {member.display_name}")
+                unavailable_mods.append(f" {self.invisible_icon} - {member.mention} *(member.name)*")
 
         # Create the embed
         embed = discord.Embed(
