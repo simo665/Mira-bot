@@ -59,7 +59,7 @@ class AdminCommands(commands.Cog):
                 available_mods.append(f"{self.online_icon} - {member.display_name}")
             elif member.status == discord.Status.dnd:
                 # DND members are considered unavailable
-                unavailable_mods.append(f"{self.dnd_icon} - {member.display_name}")
+                available_mods.append(f"{self.dnd_icon} - {member.display_name}")
             else:
                 # Offline members
                 unavailable_mods.append(f"{self.invisible_icon} - {member.display_name}")
