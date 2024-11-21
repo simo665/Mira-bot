@@ -15,6 +15,7 @@ class AdminCommands(commands.Cog):
         self.online_icon = "<:online:1308942881829945395>"
         self.dnd_icon = "<:dnd:1308941478554505216>"
         self.invisible_icon = "<:invisible:1308941489656692807>"
+        self.idle_icon = "<:Idle:1308947018550480936>"
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -54,12 +55,12 @@ class AdminCommands(commands.Cog):
         unavailable_mods = []
 
         for member in role.members:
-            if member.status == discord.Status.online or member.status == discord.Status.idle:
-                # Online or idle members are considered available
+            if member.status == discord.Status.online:
                 available_mods.append(f"{self.online_icon} - {member.display_name}")
             elif member.status == discord.Status.dnd:
-                # DND members are considered unavailable
                 available_mods.append(f"{self.dnd_icon} - {member.display_name}")
+            elif member.status == discord.Status.idle:
+                available_mods.append(f"{self.idle_icon} - {member.display_name}")
             else:
                 # Offline members
                 unavailable_mods.append(f"{self.invisible_icon} - {member.display_name}")
