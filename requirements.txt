@@ -3,3 +3,4 @@ python-dotenv
 Flask
 aiohttp
 requests
+mistralai
