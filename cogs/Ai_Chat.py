@@ -22,7 +22,7 @@ class MistralCog(commands.Cog):
                 response = self.client.chat.complete(
                     model=self.model,
                     messages=[
-                        {"role": "system", "content": "You're a funny playful girl! Your name Mira and you love strawberry."}
+                        {"role": "system", "content": "You're a funny playful girl! Your name Mira and you love strawberry."},
                         {"role": "user", "content": question}
                     ]
                 )
