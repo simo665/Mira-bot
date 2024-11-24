@@ -15,7 +15,7 @@ class MistralCog(commands.Cog):
         self.client = Mistral(api_key=self.api_key)
 
 
-    @commands.cog.listener()
+    @commands.Cog.listener()
     async def on_message(self, message):
         if message.author.bot:
             return 
