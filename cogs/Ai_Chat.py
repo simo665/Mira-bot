@@ -13,14 +13,12 @@ class MistralCog(commands.Cog):
         self.api_key = api_key
         self.model = "mistral-large-latest"
         self.client = Mistral(api_key=self.api_key)
-
         # Memory file
         self.memory_file = "user/memory.json"
         self.memory = self.load_memory()
-        
+        # customization 
         self.memory_length = 10
-        self.personality = "You're a cute little girl, you're totally a human, act and answer like a human, keep your answers shorts"
-        
+        self.personality = "You're a cute little girl, you're totally a human, act and answer like a human, keep your answers short."
 
     def load_memory(self):
         """Load memory from a JSON file."""
@@ -32,7 +30,7 @@ class MistralCog(commands.Cog):
     def save_memory(self):
         """Save memory to a JSON file."""
         with open(self.memory_file, "w") as f:
-            json.dump(self.memory, f, indent=4)
+            json.dump(self.memory, f, indent=2)
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -42,20 +40,24 @@ class MistralCog(commands.Cog):
 
         # Check if the bot is mentioned
         if self.bot.user in message.mentions:
-            # Use the channel ID as the memory key
-            memory_key = str(message.channel.id)  # Convert to string for JSON compatibility
+            # Use channel ID as the top-level key
+            channel_id = str(message.channel.id)
+            user_id = str(message.author.id)
 
-            # Create or fetch memory for the channel
-            if memory_key not in self.memory:
-                self.memory[memory_key] = []
+            # Create channel memory if not present
+            if channel_id not in self.memory:
+                self.memory[channel_id] = {}
 
-            # Add the user's message to the memory
-            self.memory[memory_key].append({"role": "user", "content": message.content})
+            # Create or fetch user memory within the channel
+            if user_id not in self.memory[channel_id]:
+                self.memory[channel_id][user_id] = []
 
-            # Limit memory to the last 5 messages
-            if len(self.memory[memory_key]) > self.memory_length:
-                self.memory[memory_key].pop(0)
+            # Add the user's message to their memory
+            self.memory[channel_id][user_id].append({"role": "user", "content": message.content})
 
+            # Limit memory to the last `memory_length` messages
+            if len(self.memory[channel_id][user_id]) > self.memory_length:
+                self.memory[channel_id][user_id].pop(0)
             try:
                 async with message.channel.typing():
                     # Send the memory (conversation history) to Mistral AI
@@ -63,15 +65,14 @@ class MistralCog(commands.Cog):
                         model=self.model,
                         messages=[
                             {"role": "system", "content": self.personality},
-                            *self.memory[memory_key],  # Pass the conversation history
+                            *self.memory[channel_id][user_id],  # Pass the conversation history
                         ]
                     )
-
                 # Get AI response
                 ai_reply = response.choices[0].message.content
 
-                # Add the AI's response to the memory
-                self.memory[memory_key].append({"role": "assistant", "content": ai_reply})
+                # Add the AI's response to the user's memory
+                self.memory[channel_id][user_id].append({"role": "assistant", "content": ai_reply})
 
                 # Save memory to file
                 self.save_memory()
@@ -82,10 +83,8 @@ class MistralCog(commands.Cog):
             except Exception as e:
                 await message.channel.send("Oops, something went wrong while processing your request.")
                 print(f"Error: {e}")
-        
         # Ensure other bot commands are processed
         await self.bot.process_commands(message)
-
 # Function to add the cog to the bot
 async def setup(bot):
     await bot.add_cog(MistralCog(bot))
