@@ -18,7 +18,7 @@ class MistralCog(commands.Cog):
     async def ask(self, ctx, *, question: str):
         """Ask Mistral AI a question and receive a response."""
         try:
-            async ctx.typing():
+            async with ctx.typing():
                 response = self.client.chat.complete(
                     model=self.model,
                     messages=[
