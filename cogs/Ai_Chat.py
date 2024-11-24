@@ -1,9 +1,7 @@
 import discord
-import os
 from discord.ext import commands
 from mistralai import Mistral
 from config import api_key
-
 
 class MistralCog(commands.Cog):
     def __init__(self, bot):
@@ -14,12 +12,14 @@ class MistralCog(commands.Cog):
         self.model = "mistral-large-latest"
         self.client = Mistral(api_key=self.api_key)
 
-
     @commands.Cog.listener()
     async def on_message(self, message):
+        # Ignore messages from bots
         if message.author.bot:
             return 
-        if message.bot.user in message.mentions:
+
+        # Check if the bot is mentioned
+        if self.bot.user in message.mentions:
             try:
                 async with message.channel.typing():
                     response = self.client.chat.complete(
@@ -31,14 +31,18 @@ class MistralCog(commands.Cog):
                     )
 
                 # Get AI response
-                    ai_reply = response.choices[0].message.content
+                ai_reply = response.choices[0].message.content
 
-            # Send response to the Discord channel
+                # Send response to the Discord channel
                 await message.channel.send(f"**Mistral AI says:** {ai_reply}")
+
             except Exception as e:
-                # Handle any errors and notify the user
                 await message.channel.send("Oops, something went wrong while processing your request.")
-            
+                print(f"Error: {e}")
+        
+        # Ensure other bot commands are processed
+        await self.bot.process_commands(message)
+
     @commands.command()
     async def ask(self, ctx, *, question: str):
         """Ask Mistral AI a question and receive a response."""
@@ -52,14 +56,13 @@ class MistralCog(commands.Cog):
                     ]
                 )
 
-            # Get AI response
+                # Get AI response
                 ai_reply = response.choices[0].message.content
 
-            # Send response to the Discord channel
-            await ctx.send(f"**Mistral AI says:** {ai_reply}")
+                # Send response to the Discord channel
+                await ctx.send(f"**Mistral AI says:** {ai_reply}")
 
         except Exception as e:
-            # Handle errors gracefully
             await ctx.send("An error occurred while communicating with Mistral AI.")
             print(f"Error: {e}")
 
