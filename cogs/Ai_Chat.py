@@ -19,7 +19,7 @@ class MistralCog(commands.Cog):
         # customization 
         self.user = None
         self.memory_length = 10
-        self.personality = f"You're a cute little girl, you're totally a human, act and answer like a human, keep your answers short, be creative in your reply to user {user}. This is the user display name on discord: {user}"
+        self.personality = f"You're a cute little girl, you're totally a human, act and answer like a human, keep your answers short, be creative in your reply to user {self.user}. This is the user display name on discord: {self.user}"
 
     def load_memory(self):
         """Load memory from a JSON file."""
