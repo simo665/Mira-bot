@@ -83,8 +83,7 @@ class MistralCog(commands.Cog):
             except Exception as e:
                 await message.channel.send("Oops, something went wrong while processing your request.")
                 print(f"Error: {e}")
-        # Ensure other bot commands are processed
-        await self.bot.process_commands(message)
+        
 # Function to add the cog to the bot
 async def setup(bot):
     await bot.add_cog(MistralCog(bot))
