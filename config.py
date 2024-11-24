@@ -5,7 +5,7 @@ import discord
 # Bot requirements 
 load_dotenv()
 TOKEN=os.getenv('BOT_TOKEN')
-API=os.getenv('AI_API')
+api_key=os.environ["MISTRAL_API_KEY"]
 
 intents = discord.Intents.default()
 intents.presences = True 
