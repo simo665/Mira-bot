@@ -17,8 +17,9 @@ class MistralCog(commands.Cog):
         self.memory_file = "user/memory.json"
         self.memory = self.load_memory()
         # customization 
+        self.user = None
         self.memory_length = 10
-        self.personality = "You're a cute little girl, you're totally a human, act and answer like a human, keep your answers short."
+        self.personality = f"You're a cute little girl, you're totally a human, act and answer like a human, keep your answers short, be creative in your reply to user {user}. This is the user display name on discord: {user}"
 
     def load_memory(self):
         """Load memory from a JSON file."""
@@ -35,6 +36,7 @@ class MistralCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         # Ignore messages from bots
+        self.user = message.author.display_name
         if message.author.bot:
             return 
 
@@ -78,7 +80,7 @@ class MistralCog(commands.Cog):
                 self.save_memory()
 
                 # Send the AI's response to the channel
-                await message.channel.send(f"**Mistral AI says:** {ai_reply}")
+                await message.channel.send(ai_reply)
 
             except Exception as e:
                 await message.channel.send("Oops, something went wrong while processing your request.")
