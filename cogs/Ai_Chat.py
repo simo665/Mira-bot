@@ -1,13 +1,16 @@
 import discord
+import os
 from discord.ext import commands
 from mistralai import Mistral
+from config import api_key
+
 
 class MistralCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
         # Mistral AI setup
-        self.api_key = os.environ["MISTRAL_API_KEY"]
+        self.api_key = api_key
         self.model = "mistral-large-latest"
         self.client = Mistral(api_key=self.api_key)
 
