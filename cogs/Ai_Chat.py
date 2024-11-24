@@ -18,16 +18,16 @@ class MistralCog(commands.Cog):
     async def ask(self, ctx, *, question: str):
         """Ask Mistral AI a question and receive a response."""
         try:
-            # Interact with Mistral AI
-            response = self.client.chat.complete(
-                model=self.model,
-                messages=[
-                    {"role": "user", "content": question}
-                ]
-            )
+            async ctx.typing():
+                response = self.client.chat.complete(
+                    model=self.model,
+                    messages=[
+                        {"role": "user", "content": question}
+                    ]
+                )
 
             # Get AI response
-            ai_reply = response.choices[0].message.content
+                ai_reply = response.choices[0].message.content
 
             # Send response to the Discord channel
             await ctx.send(f"**Mistral AI says:** {ai_reply}")
