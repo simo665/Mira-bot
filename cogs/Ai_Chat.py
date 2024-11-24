@@ -1,4 +1,6 @@
 import discord
+import json
+import os
 from discord.ext import commands
 from mistralai import Mistral
 from config import api_key
@@ -12,8 +14,25 @@ class MistralCog(commands.Cog):
         self.model = "mistral-large-latest"
         self.client = Mistral(api_key=self.api_key)
 
-        # Memory storage: key is channel ID, value is a list of conversation messages
-        self.memory = {}
+        # Memory file
+        self.memory_file = "user/memory.json"
+        self.memory = self.load_memory()
+        
+        self.memory_length = 10
+        self.personality = "You're a cute little girl, you're totally a human, act and answer like a human, keep your answers shorts"
+        
+
+    def load_memory(self):
+        """Load memory from a JSON file."""
+        if os.path.exists(self.memory_file):
+            with open(self.memory_file, "r") as f:
+                return json.load(f)
+        return {}
+
+    def save_memory(self):
+        """Save memory to a JSON file."""
+        with open(self.memory_file, "w") as f:
+            json.dump(self.memory, f, indent=4)
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -24,7 +43,7 @@ class MistralCog(commands.Cog):
         # Check if the bot is mentioned
         if self.bot.user in message.mentions:
             # Use the channel ID as the memory key
-            memory_key = message.channel.id
+            memory_key = str(message.channel.id)  # Convert to string for JSON compatibility
 
             # Create or fetch memory for the channel
             if memory_key not in self.memory:
@@ -33,8 +52,8 @@ class MistralCog(commands.Cog):
             # Add the user's message to the memory
             self.memory[memory_key].append({"role": "user", "content": message.content})
 
-            # Limit memory to the last 5 messages to avoid bloating
-            if len(self.memory[memory_key]) > 5:
+            # Limit memory to the last 5 messages
+            if len(self.memory[memory_key]) > self.memory_length:
                 self.memory[memory_key].pop(0)
 
             try:
@@ -43,7 +62,7 @@ class MistralCog(commands.Cog):
                     response = self.client.chat.complete(
                         model=self.model,
                         messages=[
-                            {"role": "system", "content": "You're a funny playful girl! Your name is Mira, and you love strawberries."},
+                            {"role": "system", "content": self.personality},
                             *self.memory[memory_key],  # Pass the conversation history
                         ]
                     )
@@ -53,6 +72,9 @@ class MistralCog(commands.Cog):
 
                 # Add the AI's response to the memory
                 self.memory[memory_key].append({"role": "assistant", "content": ai_reply})
+
+                # Save memory to file
+                self.save_memory()
 
                 # Send the AI's response to the channel
                 await message.channel.send(f"**Mistral AI says:** {ai_reply}")
