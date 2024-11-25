@@ -73,12 +73,14 @@ class MistralCog(commands.Cog):
         # Ignore messages from bots
         if message.author.bot:
             return
-
+        print("someone sent a message ^^")
         server_id = str(message.guild.id)
         user_id = str(message.author.id)
+        print(f"We got the {server_id} and (user_id)")
 
         # Load user's memory
         user_memory = self.load_user_memory(user_id)
+        print(f"We loaded user memory: {user_memory}")
 
         # Initialize conversation history if not present
         if "conversation" not in user_memory:
