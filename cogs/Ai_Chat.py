@@ -3,7 +3,7 @@ import json
 import os
 from discord.ext import commands
 from mistralai import Mistral
-from config import api_key
+from config import api_key, knowledge, personality, memory_length
 
 class MistralCog(commands.Cog):
     def __init__(self, bot):
@@ -17,9 +17,10 @@ class MistralCog(commands.Cog):
         self.memory = self.load_memory()
         # customization 
         self.user = None
-        self.memory_length = 10
-        self.personality = f"You're a cute little girl, you're totally a human, act and answer like a human, keep your answers short, be creative in your reply to user."
-
+        self.memory_length = memory_length
+        self.personality = personality 
+        self.knowledge = knowledge
+        
     def load_memory(self):
         """Load memory from a JSON file."""
         if os.path.exists(self.memory_file):
@@ -34,10 +35,11 @@ class MistralCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        # Ignore messages from bots
+        # AI Assistance
         self.user = message.author.display_name
-        assistant = f"The user's name is {self.user}. You can use this name in your replies to personalize them."
-        
+        assistant = f"The user's name is {self.user}. You can use this name in your replies to personalize them. " 
+        assistant += self.knowledge
+        # Ignore messages from bots
         if message.author.bot:
             return 
 
