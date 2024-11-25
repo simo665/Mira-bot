@@ -73,24 +73,20 @@ class MistralCog(commands.Cog):
         # Ignore messages from bots
         if message.author.bot:
             return
-        print("someone sent a message ^^")
+            
         server_id = str(message.guild.id)
         user_id = str(message.author.id)
-        print(f"We got the {server_id} and {user_id}")
-
+        
         # Load user's memory
         user_memory = self.load_user_memory(user_id)
-        print(f"We loaded user memory: {user_memory}")
 
         # Initialize conversation history if not present
         if "conversation" not in user_memory:
             user_memory["conversation"] = []
-            print("conversation is not in memory")
         
 
         # Add the new message to the conversation history
         user_memory["conversation"].append(f"{message.author.display_name}: {message.content}")
-        print("message appended")
         
         # Limit conversation history length
         if len(user_memory["conversation"]) > self.memory_length:
@@ -98,7 +94,7 @@ class MistralCog(commands.Cog):
 
         # Increment message counter and check threshold
         message_count = self.increment_message_counter(user_id)
-        print("counter increased")
+        
         if message_count >= self.save_threshold:
             # Generate a summary
             summary = await self.generate_summary(user_id, user_memory["conversation"])
@@ -108,7 +104,7 @@ class MistralCog(commands.Cog):
 
         # Save the updated memory
         self.save_user_memory(user_id, user_memory)
-
+        self.message_count = self.increment_message_counter(user_id)
         # If the bot is mentioned, respond
         if self.bot.user in message.mentions:
             print("The bot mentioned!")
