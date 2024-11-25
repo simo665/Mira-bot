@@ -43,22 +43,25 @@ class MistralCog(commands.Cog):
         if message.author.bot:
             return 
 
-        # Check if the bot is mentioned
-        if self.bot.user in message.mentions:
-            # Use channel ID as the top-level key
-            channel_id = str(message.channel.id)
-            user_id = str(message.author.id)
-            # Create channel memory if not present
-            if channel_id not in self.memory:
-                self.memory[channel_id] = {}
-            # Create or fetch user memory within the channel
-            if user_id not in self.memory[channel_id]:
-                self.memory[channel_id][user_id] = []
-            # Add the user's message to their memory
-            self.memory[channel_id][user_id].append({"role": "user", "content": message.content})
-            # Limit memory to the last `memory_length` messages
-            if len(self.memory[channel_id][user_id]) > self.memory_length:
+        # Use channel ID as the top-level key
+        channel_id = str(message.channel.id)
+        user_id = str(message.author.id)
+            
+        # Create channel memory if not present
+        if channel_id not in self.memory:
+            self.memory[channel_id] = {}
+            
+        # Create or fetch user memory within the channel
+        if user_id not in self.memory[channel_id]:
+            self.memory[channel_id][user_id] = []
+            
+        # Add the user's message to their memory
+        self.memory[channel_id][user_id].append({"role": "user", "content": message.content})
+        
+        # Limit memory to the last `memory_length` messages
+        if len(self.memory[channel_id][user_id]) > self.memory_length:
                 self.memory[channel_id][user_id].pop(0)
+        if self.bot.user in message.mentions:
             try:
                 async with message.channel.typing():
                     # Send the memory (conversation history) to Mistral AI
