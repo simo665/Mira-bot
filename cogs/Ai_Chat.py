@@ -1,9 +1,10 @@
 import discord
 import json
 import os
-from discord.ext import commands
+from discord.ext import commands, tasks
 from mistralai import Mistral
-from config import api_key, knowledge, personality, memory_length
+from config import api_key, knowledge, personality, memory_length, save_threshold
+import importlib
 
 class MistralCog(commands.Cog):
     def __init__(self, bot):
@@ -15,11 +16,16 @@ class MistralCog(commands.Cog):
         # Memory file
         self.memory_file = "user/memory.json"
         self.memory = self.load_memory()
+        self.save_threshold = save_threshold  # Save memory after specific number of messages every time 
+        self.message_counter = 0
         # customization 
         self.user = None
         self.memory_length = memory_length
         self.personality = personality 
         self.knowledge = knowledge
+        self.save_memory_task.start()  # Start periodic memory saving task
+        
+        
         
     def load_memory(self):
         """Load memory from a JSON file."""
@@ -32,7 +38,15 @@ class MistralCog(commands.Cog):
         """Save memory to a JSON file."""
         with open(self.memory_file, "w") as f:
             json.dump(self.memory, f, indent=2)
-
+            
+    def increment_message_counter(self):
+        """Increment the message counter and save memory if threshold is reached."""
+        self.message_counter += 1
+        if self.message_counter >= self.save_threshold:
+            self.save_memory()
+            self.message_counter = 0  # Reset the counter
+            
+            
     @commands.Cog.listener()
     async def on_message(self, message):
         # AI Assistance
@@ -61,6 +75,9 @@ class MistralCog(commands.Cog):
         # Limit memory to the last `memory_length` messages
         if len(self.memory[channel_id][user_id]) > self.memory_length:
                 self.memory[channel_id][user_id].pop(0)
+                
+        increment_message_counter()      
+          
         if self.bot.user in message.mentions:
             try:
                 async with message.channel.typing():
@@ -86,6 +103,53 @@ class MistralCog(commands.Cog):
                 await message.channel.send("Oops, something went wrong while processing your request.")
                 print(f"Error: {e}")
         
+        
+        
+# *******  Commands  *******       
+    @commands.command(name="sleep")
+    @commands.has_permissions(administrator=True)
+    async def save_memory_command(self, ctx):
+        """Manually save memory to file."""
+        self.save_memory()
+        await ctx.send("Memory saved manually.")  
+        
+    @commands.command(name="reset")
+    @commands.has_permissions(administrator=True)
+    async def reset_memory(self, ctx, channel_id=None, user_id=None):
+        """Reset memory for a channel or specific user."""
+        channel_id = channel_id or str(ctx.channel.id)
+        if channel_id in self.memory:
+            if user_id:
+                user_id = str(user_id)
+                if user_id in self.memory[channel_id]:
+                    del self.memory[channel_id][user_id]
+                    await ctx.send(f"Memory for user {user_id} in channel {channel_id} has been reset.")
+                else:
+                    await ctx.send("No memory found for that user in this channel.")
+            else:
+                del self.memory[channel_id]
+                await ctx.send(f"Memory for channel {channel_id} has been reset.")
+            self.save_memory()
+        else:
+            await ctx.send("No memory found for this channel.")    
+            
+            
+    @commands.command(name="set_personality")
+    @commands.has_permissions(administrator=True)
+    async def set_personality(self, ctx, *, new_personality):
+        """Change the personality dynamically."""
+        self.personality = new_personality
+        await ctx.send("Personality has been updated.")
+        print(f"New personality: {self.personality}")
+
+    @commands.command(name="reload_personality")
+    @commands.has_permissions(administrator=True)
+    async def reload_personality(self, ctx):
+        """Reload personality from the config file."""
+        importlib.reload(config)  # Reload the config module
+        self.personality = config.personality  # Update the personality from config
+        await ctx.send("Personality has been reloaded from the config file.")
+                    
 # Function to add the cog to the bot
 async def setup(bot):
     await bot.add_cog(MistralCog(bot))
