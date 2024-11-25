@@ -74,9 +74,12 @@ class MistralCog(commands.Cog):
         # Ignore messages from bots
         if message.author.bot:
             return
-            
+        
+        assistant = f"The user's name is {message.author.display_name}. You can use this name in your replies to personalize them. " 
+        assistant += self.knowledge
         server_id = str(message.guild.id)
         user_id = str(message.author.id)
+        
         
         # Load user's memory
         user_memory = self.load_user_memory(user_id)
