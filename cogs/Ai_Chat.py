@@ -105,6 +105,7 @@ class MistralCog(commands.Cog):
 
         # If the bot is mentioned, respond
         if self.bot.user in message.mentions:
+            print("The bot mentioned!")
             try:
                 async with message.channel.typing():
                     # Include memory summaries in the AI input
