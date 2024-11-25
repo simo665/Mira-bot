@@ -1,10 +1,11 @@
 import discord
 import json
 import os
-from discord.ext import commands, tasks
+from discord.ext import commands
 from mistralai import Mistral
 from config import api_key, knowledge, personality, memory_length, save_threshold
 import importlib
+import asyncio
 
 class MistralCog(commands.Cog):
     def __init__(self, bot):
@@ -23,7 +24,7 @@ class MistralCog(commands.Cog):
         self.memory_length = memory_length
         self.personality = personality 
         self.knowledge = knowledge
-        
+          
         
         
     def load_memory(self):
@@ -37,6 +38,7 @@ class MistralCog(commands.Cog):
         """Save memory to a JSON file."""
         with open(self.memory_file, "w") as f:
             json.dump(self.memory, f, indent=2)
+            print("Memories are saved successfully")
             
     def increment_message_counter(self):
         """Increment the message counter and save memory if threshold is reached."""
@@ -75,7 +77,7 @@ class MistralCog(commands.Cog):
         if len(self.memory[channel_id][user_id]) > self.memory_length:
                 self.memory[channel_id][user_id].pop(0)
                 
-        increment_message_counter()      
+        self.increment_message_counter()      
           
         if self.bot.user in message.mentions:
             try:
@@ -93,11 +95,17 @@ class MistralCog(commands.Cog):
                 ai_reply = response.choices[0].message.content
                 # Add the AI's response to the user's memory
                 self.memory[channel_id][user_id].append({"role": "assistant", "content": ai_reply})
-                # Save memory to file
-                self.save_memory()
                 # Send the AI's response to the channel
                 await message.channel.send(ai_reply)
-                
+            except ConnectionError:
+                await message.channel.send("There seems to be a network issue. Please try again later.")
+                print("Network error: Unable to reach Mistral API.")
+            except KeyError as e:
+                await message.channel.send("Oops, something went wrong with the data format. Please report this issue.")
+                print(f"KeyError: Missing key in API response: {e}")
+            except json.JSONDecodeError:
+                await message.channel.send("Received an invalid response from the AI. Please try again later.")
+                print("JSONDecodeError: Invalid response from API.")    
             except Exception as e:
                 await message.channel.send("Oops, something went wrong while processing your request.")
                 print(f"Error: {e}")
