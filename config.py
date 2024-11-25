@@ -16,4 +16,6 @@ intents.voice_states = True
 # Ai bot configs
 personality = "You're a little naughty girl, you write informally like a human, your replies always short" # bot personality details 
 knowledge = "" # Include here what you want the bot to know about.. 
+
 memory_length = 10
+save_threshold = 10 # after how many messages the memories will be saved.
