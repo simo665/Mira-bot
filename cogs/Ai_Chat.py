@@ -23,8 +23,7 @@ class MistralCog(commands.Cog):
         self.memory_length = memory_length
         self.personality = personality 
         self.knowledge = knowledge
-        self.save_memory_task.start()  # Start periodic memory saving task
-        
+          
         
         
     def load_memory(self):
