@@ -38,6 +38,7 @@ class MistralCog(commands.Cog):
         """Save memory to a JSON file."""
         with open(self.memory_file, "w") as f:
             json.dump(self.memory, f, indent=2)
+            print("Memories are saved successfully")
             
     def increment_message_counter(self):
         """Increment the message counter and save memory if threshold is reached."""
