@@ -19,6 +19,7 @@ class MistralCog(commands.Cog):
         os.makedirs(self.memory_dir, exist_ok=True)
         self.save_threshold = save_threshold  # Save memory after a specific number of messages
         self.message_counter = {}
+        self.memory_length = memory_length
         self.personality = personality
         self.knowledge = knowledge
 
@@ -104,7 +105,7 @@ class MistralCog(commands.Cog):
 
         # Save the updated memory
         self.save_user_memory(user_id, user_memory)
-        self.message_count = self.increment_message_counter(user_id)
+        message_count = self.message_counter.get(user_id, 0)
         # If the bot is mentioned, respond
         if self.bot.user in message.mentions:
             print("The bot mentioned!")
