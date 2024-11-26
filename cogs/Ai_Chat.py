@@ -3,8 +3,7 @@ import json
 import os
 from discord.ext import commands
 from mistralai import Mistral
-from config import api_key, knowledge, personality, memory_length, save_threshold
-import asyncio
+from config import api_key, knowledge, personality, memory_length
 
 class MistralCog(commands.Cog):
     def __init__(self, bot):
@@ -13,11 +12,9 @@ class MistralCog(commands.Cog):
         self.model = "mistral-large-latest"
         self.client = Mistral(api_key=self.api_key)
         self.memory_dir = "user/user_memories"  # Directory for individual user memories
-        self.temp_memory = {}  # Temporary memory for channel context
-        self.memory_length = memory_length
-        self.personality = personality
-        self.knowledge = knowledge
-        self.save_threshold = save_threshold
+        self.temp_memory = {}  # Temporary memory for recent messages
+        self.message_counter = {}  # Message count per user
+        self.summary_threshold = 15  # Number of messages before generating a summary
 
         # Ensure the memory directory exists
         os.makedirs(self.memory_dir, exist_ok=True)
@@ -28,7 +25,7 @@ class MistralCog(commands.Cog):
         if os.path.exists(memory_file):
             with open(memory_file, "r") as f:
                 return json.load(f)
-        return []
+        return {"summaries": [], "recent_messages": []}
 
     def save_user_memory(self, user_id, memory):
         """Save memory for a specific user to a JSON file."""
@@ -37,13 +34,41 @@ class MistralCog(commands.Cog):
             json.dump(memory, f, indent=2)
             print(f"Memory for user {user_id} saved successfully.")
 
-    def add_to_temp_memory(self, channel_id, message):
-        """Add a message to temporary memory for context."""
-        if channel_id not in self.temp_memory:
-            self.temp_memory[channel_id] = []
-        self.temp_memory[channel_id].append(message)
-        if len(self.temp_memory[channel_id]) > self.memory_length:
-            self.temp_memory[channel_id].pop(0)
+    def add_to_temp_memory(self, user_id, message):
+        """Add a message to the temporary memory."""
+        if user_id not in self.temp_memory:
+            self.temp_memory[user_id] = []
+        self.temp_memory[user_id].append(message)
+
+    async def generate_summary(self, user_id):
+        """Generate a summary of the last 15 messages."""
+        user_memory = self.load_user_memory(user_id)
+        recent_messages = user_memory["recent_messages"]
+
+        # If there aren't enough messages, skip summarization
+        if len(recent_messages) < self.summary_threshold:
+            return
+
+        summary_prompt = (
+            "Summarize the following conversation in no more than 5 lines. "
+            "Focus on key topics and exchanges between the user and the assistant."
+        )
+        summarization_request = [{"role": "system", "content": summary_prompt}] + recent_messages
+
+        try:
+            response = self.client.chat.complete(
+                model=self.model,
+                messages=summarization_request,
+            )
+            summary = response.choices[0].message.content.strip()
+
+            # Save the summary and clear recent messages
+            user_memory["summaries"].append(summary)
+            user_memory["recent_messages"] = []
+            self.save_user_memory(user_id, user_memory)
+            print(f"Summary generated for user {user_id}: {summary}")
+        except Exception as e:
+            print(f"Error generating summary for user {user_id}: {e}")
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -51,92 +76,64 @@ class MistralCog(commands.Cog):
         if message.author.bot:
             return
 
-        channel_id = str(message.channel.id)
         user_id = str(message.author.id)
-
-        # Add message to temporary memory for context
-        self.add_to_temp_memory(channel_id, {"role": "user", "content": message.content})
+        self.add_to_temp_memory(user_id, {"role": "user", "content": message.content})
 
         # Process only if the bot is mentioned
         if self.bot.user in message.mentions:
             user_memory = self.load_user_memory(user_id)
+            recent_messages = user_memory["recent_messages"]
 
-            # Include temporary memory for context
-            context_memory = self.temp_memory.get(channel_id, [])
-            complete_memory = context_memory + user_memory
+            # Add the user's message to recent messages
+            recent_messages.append({"role": "user", "content": message.content})
 
-            # Create the system and assistant prompt
-            system_message = {"role": "system", "content": self.personality}
-            assistant_message = {
-                "role": "assistant",
-                "content": (
-                    f"The user's name is {message.author.display_name}. "
-                    "You can use this name in your replies to personalize them. "
-                    + self.knowledge
-                ),
-            }
+            assistant_message = f"The user's name is {message.author.display_name}. Use this name in replies. "
+            assistant_message += self.knowledge
 
             try:
                 async with message.channel.typing():
-                    # Prepare messages for API
-                    messages = [system_message] + complete_memory + [{"role": "user", "content": message.content}]
-
-                    # Print messages for debugging
-                    print("Messages for API:", json.dumps(messages, indent=2))
-
-                    # Get AI response
                     response = self.client.chat.complete(
                         model=self.model,
-                        messages=messages,
+                        messages=[
+                            {"role": "system", "content": self.personality},
+                            {"role": "assistant", "content": assistant_message},
+                            *recent_messages,
+                        ],
                     )
+                ai_reply = response.choices[0].message.content
 
-                    ai_reply = response.choices[0].message.content
+                # Add assistant reply to recent messages
+                recent_messages.append({"role": "assistant", "content": ai_reply})
+                user_memory["recent_messages"] = recent_messages
 
-                    # Save only the interaction with the bot to user memory
-                    user_memory.append({"role": "user", "content": message.content})
-                    user_memory.append({"role": "assistant", "content": ai_reply})
-                    if len(user_memory) > self.memory_length:
-                        user_memory.pop(0)
+                # Save user memory and track message count
+                self.message_counter[user_id] = self.message_counter.get(user_id, 0) + 1
+                if self.message_counter[user_id] >= self.summary_threshold:
+                    await self.generate_summary(user_id)
+                    self.message_counter[user_id] = 0  # Reset counter
 
-                    self.save_user_memory(user_id, user_memory)
+                self.save_user_memory(user_id, user_memory)
 
-                    # Send the AI's response
-                    await message.channel.send(ai_reply)
-            except ConnectionError:
-                await message.channel.send("There seems to be a network issue. Please try again later.")
-            except KeyError as e:
-                await message.channel.send("Oops, something went wrong with the data format. Please report this issue.")
-                print(f"KeyError: {e}")
-            except json.JSONDecodeError:
-                await message.channel.send("Received an invalid response from the AI. Please try again later.")
+                # Send the AI's response
+                await message.channel.send(ai_reply)
             except Exception as e:
                 await message.channel.send("Oops, something went wrong while processing your request.")
                 print(f"Error: {e}")
 
-    @commands.command(name="reset")
-    @commands.has_permissions(administrator=True)
-    async def reset_user_memory(self, ctx, user_id=None):
-        """Reset memory for a specific user."""
-        if user_id:
-            memory_file = os.path.join(self.memory_dir, f"{user_id}.json")
-            if os.path.exists(memory_file):
-                os.remove(memory_file)
-                await ctx.send(f"Memory for user {user_id} has been reset.")
-            else:
-                await ctx.send("No memory found for that user.")
-        else:
-            await ctx.send("Please specify a user ID to reset their memory.")
+    @commands.command(name="view_summaries")
+    async def view_summaries(self, ctx, user_id=None):
+        """View summaries for a specific user."""
+        if not user_id:
+            user_id = str(ctx.author.id)
 
-    @commands.command(name="save")
-    @commands.has_permissions(administrator=True)
-    async def save_all_memories(self, ctx):
-        """Save temporary memory to individual user files."""
-        for channel_id, memory in self.temp_memory.items():
-            for message in memory:
-                if message["role"] == "user":
-                    user_id = message["content"]
-                    self.save_user_memory(user_id, memory)
-        await ctx.send("All memories have been saved.")
+        user_memory = self.load_user_memory(user_id)
+        summaries = user_memory.get("summaries", [])
+
+        if summaries:
+            summary_text = "\n\n".join([f"- {summary}" for summary in summaries])
+            await ctx.send(f"**Conversation Summaries for User {user_id}:**\n{summary_text}")
+        else:
+            await ctx.send("No summaries available for this user.")
 
 # Function to add the cog to the bot
 async def setup(bot):
