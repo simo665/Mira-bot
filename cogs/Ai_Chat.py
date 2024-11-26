@@ -18,7 +18,6 @@ class MistralCog(commands.Cog):
         self.personality = personality
         self.knowledge = knowledge
         self.save_threshold = save_threshold
-        self.message_counter = {}
 
         # Ensure the memory directory exists
         os.makedirs(self.memory_dir, exist_ok=True)
@@ -66,36 +65,48 @@ class MistralCog(commands.Cog):
             context_memory = self.temp_memory.get(channel_id, [])
             complete_memory = context_memory + user_memory
 
-            assistant_message = f"The user's name is {message.author.display_name}. You can use this name in your replies to personalize them. "
-            assistant_message += self.knowledge
+            # Create the system and assistant prompt
+            system_message = {"role": "system", "content": self.personality}
+            assistant_message = {
+                "role": "assistant",
+                "content": (
+                    f"The user's name is {message.author.display_name}. "
+                    "You can use this name in your replies to personalize them. "
+                    + self.knowledge
+                ),
+            }
 
             try:
                 async with message.channel.typing():
+                    # Prepare messages for API
+                    messages = [system_message] + complete_memory + [{"role": "user", "content": message.content}]
+
+                    # Print messages for debugging
+                    print("Messages for API:", json.dumps(messages, indent=2))
+
+                    # Get AI response
                     response = self.client.chat.complete(
                         model=self.model,
-                        messages=[
-                            {"role": "system", "content": self.personality},
-                            {"role": "assistant", "content": assistant_message},
-                            *complete_memory
-                        ]
+                        messages=messages,
                     )
-                # Get AI response
-                ai_reply = response.choices[0].message.content
 
-                # Save only the interaction with the bot to user memory
-                user_memory.append({"role": "user", "content": message.content})
-                user_memory.append({"role": "assistant", "content": ai_reply})
-                if len(user_memory) > self.memory_length:
-                    user_memory.pop(0)
+                    ai_reply = response.choices[0].message.content
 
-                self.save_user_memory(user_id, user_memory)
+                    # Save only the interaction with the bot to user memory
+                    user_memory.append({"role": "user", "content": message.content})
+                    user_memory.append({"role": "assistant", "content": ai_reply})
+                    if len(user_memory) > self.memory_length:
+                        user_memory.pop(0)
 
-                # Send the AI's response
-                await message.channel.send(ai_reply)
+                    self.save_user_memory(user_id, user_memory)
+
+                    # Send the AI's response
+                    await message.channel.send(ai_reply)
             except ConnectionError:
                 await message.channel.send("There seems to be a network issue. Please try again later.")
             except KeyError as e:
                 await message.channel.send("Oops, something went wrong with the data format. Please report this issue.")
+                print(f"KeyError: {e}")
             except json.JSONDecodeError:
                 await message.channel.send("Received an invalid response from the AI. Please try again later.")
             except Exception as e:
@@ -120,8 +131,11 @@ class MistralCog(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def save_all_memories(self, ctx):
         """Save temporary memory to individual user files."""
-        for user_id, memory in self.temp_memory.items():
-            self.save_user_memory(user_id, memory)
+        for channel_id, memory in self.temp_memory.items():
+            for message in memory:
+                if message["role"] == "user":
+                    user_id = message["content"]
+                    self.save_user_memory(user_id, memory)
         await ctx.send("All memories have been saved.")
 
 # Function to add the cog to the bot
