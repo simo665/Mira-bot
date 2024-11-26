@@ -73,12 +73,13 @@ class MistralCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         # Ignore messages from bots
+        print("1")
         if message.author.bot:
             return
 
         user_id = str(message.author.id)
         self.add_to_temp_memory(user_id, {"role": "user", "content": message.content})
-
+        print("2")
         # Process only if the bot is mentioned
         if self.bot.user in message.mentions:
             user_memory = self.load_user_memory(user_id)
@@ -89,8 +90,10 @@ class MistralCog(commands.Cog):
 
             assistant_message = f"The user's name is {message.author.display_name}. Use this name in replies. "
             assistant_message += self.knowledge
+            print("3")
 
             try:
+                print("4")
                 async with message.channel.typing():
                     response = self.client.chat.complete(
                         model=self.model,
@@ -101,11 +104,11 @@ class MistralCog(commands.Cog):
                         ],
                     )
                 ai_reply = response.choices[0].message.content
-
+                print("5")
                 # Add assistant reply to recent messages
                 recent_messages.append({"role": "assistant", "content": ai_reply})
                 user_memory["recent_messages"] = recent_messages
-
+                print("6")
                 # Save user memory and track message count
                 self.message_counter[user_id] = self.message_counter.get(user_id, 0) + 1
                 if self.message_counter[user_id] >= self.summary_threshold:
