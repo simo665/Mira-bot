@@ -23,10 +23,17 @@ class MistralCog(commands.Cog):
         """Load memory for a specific user from a JSON file."""
         memory_file = os.path.join(self.memory_dir, f"{user_id}.json")
         if os.path.exists(memory_file):
-            with open(memory_file, "r") as f:
-                return json.load(f)
-        return {"summaries": [], "recent_messages": []}
-
+            try:
+                with open(memory_file, "r") as f:
+                    memory = json.load(f)
+                    print(f"Memory loaded for user {user_id}: {memory}")
+                    return memory
+            except Exception as e:
+                print(f"Error reading file for user {user_id}: {e}")
+        else:
+            print(f"Memory file not found for user {user_id}, returning default.")
+            
+return {"summaries": [], "recent_messages": []}
     def save_user_memory(self, user_id, memory):
         """Save memory for a specific user to a JSON file."""
         memory_file = os.path.join(self.memory_dir, f"{user_id}.json")
