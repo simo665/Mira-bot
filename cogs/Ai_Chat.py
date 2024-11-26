@@ -21,7 +21,9 @@ class MistralCog(commands.Cog):
 
     def load_user_memory(self, user_id):
         """Load memory for a specific user from a JSON file."""
+        print("I'm inside loading function")
         memory_file = os.path.join(self.memory_dir, f"{user_id}.json")
+        print(f"Does the path exist? {os.path.exists(memory_file)}")
         if os.path.exists(memory_file):
             try:
                 with open(memory_file, "r") as f:
