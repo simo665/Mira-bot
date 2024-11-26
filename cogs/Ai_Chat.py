@@ -32,8 +32,8 @@ class MistralCog(commands.Cog):
                 print(f"Error reading file for user {user_id}: {e}")
         else:
             print(f"Memory file not found for user {user_id}, returning default.")
+        return {"summaries": [], "recent_messages": []}
             
-return {"summaries": [], "recent_messages": []}
     def save_user_memory(self, user_id, memory):
         """Save memory for a specific user to a JSON file."""
         memory_file = os.path.join(self.memory_dir, f"{user_id}.json")
