@@ -73,16 +73,15 @@ class MistralCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         # Ignore messages from bots
-        print("1")
         if message.author.bot:
             return
 
         user_id = str(message.author.id)
         self.add_to_temp_memory(user_id, {"role": "user", "content": message.content})
-        print("2")
+    
         # Process only if the bot is mentioned
         if self.bot.user in message.mentions:
-            user_memory = self.load_user_memory(user_id)
+            user_memory = self.load_user_memory(self, user_id)
             recent_messages = user_memory["recent_messages"]
 
             # Add the user's message to recent messages
