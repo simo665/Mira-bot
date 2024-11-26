@@ -141,22 +141,6 @@ class MistralCog(commands.Cog):
             await ctx.send("No memory found for this channel.")    
             
             
-    @commands.command(name="set_personality")
-    @commands.has_permissions(administrator=True)
-    async def set_personality(self, ctx, *, new_personality):
-        """Change the personality dynamically."""
-        self.personality = new_personality
-        await ctx.send("Personality has been updated.")
-        print(f"New personality: {self.personality}")
-
-    @commands.command(name="reload_personality")
-    @commands.has_permissions(administrator=True)
-    async def reload_personality(self, ctx):
-        """Reload personality from the config file."""
-        importlib.reload(config)  # Reload the config module
-        self.personality = config.personality  # Update the personality from config
-        await ctx.send("Personality has been reloaded from the config file.")
-                    
 # Function to add the cog to the bot
 async def setup(bot):
     await bot.add_cog(MistralCog(bot))
