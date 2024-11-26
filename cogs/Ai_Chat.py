@@ -4,143 +4,126 @@ import os
 from discord.ext import commands
 from mistralai import Mistral
 from config import api_key, knowledge, personality, memory_length, save_threshold
-import importlib
 import asyncio
 
 class MistralCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        # Mistral AI setup
         self.api_key = api_key
         self.model = "mistral-large-latest"
         self.client = Mistral(api_key=self.api_key)
-        # Memory file
-        self.memory_file = "user/memory.json"
-        self.memory = self.load_memory()
-        self.save_threshold = save_threshold  # Save memory after specific number of messages every time 
-        self.message_counter = 0
-        # customization 
-        self.user = None
+        self.memory_dir = "user/user_memories"  # Directory for individual user memories
+        self.temp_memory = {}  # Temporary memory for channel context
         self.memory_length = memory_length
-        self.personality = personality 
+        self.personality = personality
         self.knowledge = knowledge
-          
-        
-        
-    def load_memory(self):
-        """Load memory from a JSON file."""
-        if os.path.exists(self.memory_file):
-            with open(self.memory_file, "r") as f:
-                return json.load(f)
-        return {}
+        self.save_threshold = save_threshold
+        self.message_counter = {}
 
-    def save_memory(self):
-        """Save memory to a JSON file."""
-        with open(self.memory_file, "w") as f:
-            json.dump(self.memory, f, indent=2)
-            print("Memories are saved successfully")
-            
-    def increment_message_counter(self):
-        """Increment the message counter and save memory if threshold is reached."""
-        self.message_counter += 1
-        if self.message_counter >= self.save_threshold:
-            self.save_memory()
-            self.message_counter = 0  # Reset the counter
-            
-            
+        # Ensure the memory directory exists
+        os.makedirs(self.memory_dir, exist_ok=True)
+
+    def load_user_memory(self, user_id):
+        """Load memory for a specific user from a JSON file."""
+        memory_file = os.path.join(self.memory_dir, f"{user_id}.json")
+        if os.path.exists(memory_file):
+            with open(memory_file, "r") as f:
+                return json.load(f)
+        return []
+
+    def save_user_memory(self, user_id, memory):
+        """Save memory for a specific user to a JSON file."""
+        memory_file = os.path.join(self.memory_dir, f"{user_id}.json")
+        with open(memory_file, "w") as f:
+            json.dump(memory, f, indent=2)
+            print(f"Memory for user {user_id} saved successfully.")
+
+    def add_to_temp_memory(self, channel_id, message):
+        """Add a message to temporary memory for context."""
+        if channel_id not in self.temp_memory:
+            self.temp_memory[channel_id] = []
+        self.temp_memory[channel_id].append(message)
+        if len(self.temp_memory[channel_id]) > self.memory_length:
+            self.temp_memory[channel_id].pop(0)
+
     @commands.Cog.listener()
     async def on_message(self, message):
-        # AI Assistance
-        self.user = message.author.display_name
-        assistant = f"The user's name is {self.user}. You can use this name in your replies to personalize them. " 
-        assistant += self.knowledge
         # Ignore messages from bots
         if message.author.bot:
-            return 
+            return
 
-        # Use channel ID as the top-level key
         channel_id = str(message.channel.id)
         user_id = str(message.author.id)
-            
-        # Create channel memory if not present
-        if channel_id not in self.memory:
-            self.memory[channel_id] = {}
-            
-        # Create or fetch user memory within the channel
-        if user_id not in self.memory[channel_id]:
-            self.memory[channel_id][user_id] = []
-            
-        # Add the user's message to their memory
-        self.memory[channel_id][user_id].append({"role": "user", "content": message.content})
-        
-        # Limit memory to the last `memory_length` messages
-        if len(self.memory[channel_id][user_id]) > self.memory_length:
-                self.memory[channel_id][user_id].pop(0)
-                
-        self.increment_message_counter()      
-          
+
+        # Add message to temporary memory for context
+        self.add_to_temp_memory(channel_id, {"role": "user", "content": message.content})
+
+        # Process only if the bot is mentioned
         if self.bot.user in message.mentions:
+            user_memory = self.load_user_memory(user_id)
+
+            # Include temporary memory for context
+            context_memory = self.temp_memory.get(channel_id, [])
+            complete_memory = context_memory + user_memory
+
+            assistant_message = f"The user's name is {message.author.display_name}. You can use this name in your replies to personalize them. "
+            assistant_message += self.knowledge
+
             try:
                 async with message.channel.typing():
-                    # Send the memory (conversation history) to Mistral AI
                     response = self.client.chat.complete(
                         model=self.model,
                         messages=[
                             {"role": "system", "content": self.personality},
-                            {"role": "assistant", "content": assistant},
-                            *self.memory[channel_id][user_id]  # Pass the conversation historic 
+                            {"role": "assistant", "content": assistant_message},
+                            *complete_memory
                         ]
                     )
                 # Get AI response
                 ai_reply = response.choices[0].message.content
-                # Add the AI's response to the user's memory
-                self.memory[channel_id][user_id].append({"role": "assistant", "content": ai_reply})
-                # Send the AI's response to the channel
+
+                # Save only the interaction with the bot to user memory
+                user_memory.append({"role": "user", "content": message.content})
+                user_memory.append({"role": "assistant", "content": ai_reply})
+                if len(user_memory) > self.memory_length:
+                    user_memory.pop(0)
+
+                self.save_user_memory(user_id, user_memory)
+
+                # Send the AI's response
                 await message.channel.send(ai_reply)
             except ConnectionError:
                 await message.channel.send("There seems to be a network issue. Please try again later.")
-                print("Network error: Unable to reach Mistral API.")
             except KeyError as e:
                 await message.channel.send("Oops, something went wrong with the data format. Please report this issue.")
-                print(f"KeyError: Missing key in API response: {e}")
             except json.JSONDecodeError:
                 await message.channel.send("Received an invalid response from the AI. Please try again later.")
-                print("JSONDecodeError: Invalid response from API.")    
             except Exception as e:
                 await message.channel.send("Oops, something went wrong while processing your request.")
                 print(f"Error: {e}")
-        
-        
-        
-# *******  Commands  *******       
-    @commands.command(name="sleep")
-    @commands.has_permissions(administrator=True)
-    async def save_memory_command(self, ctx):
-        """Manually save memory to file."""
-        self.save_memory()
-        await ctx.send("Memory saved manually.")  
-        
+
     @commands.command(name="reset")
     @commands.has_permissions(administrator=True)
-    async def reset_memory(self, ctx, channel_id=None, user_id=None):
-        """Reset memory for a channel or specific user."""
-        channel_id = channel_id or str(ctx.channel.id)
-        if channel_id in self.memory:
-            if user_id:
-                user_id = str(user_id)
-                if user_id in self.memory[channel_id]:
-                    del self.memory[channel_id][user_id]
-                    await ctx.send(f"Memory for user {user_id} in channel {channel_id} has been reset.")
-                else:
-                    await ctx.send("No memory found for that user in this channel.")
+    async def reset_user_memory(self, ctx, user_id=None):
+        """Reset memory for a specific user."""
+        if user_id:
+            memory_file = os.path.join(self.memory_dir, f"{user_id}.json")
+            if os.path.exists(memory_file):
+                os.remove(memory_file)
+                await ctx.send(f"Memory for user {user_id} has been reset.")
             else:
-                del self.memory[channel_id]
-                await ctx.send(f"Memory for channel {channel_id} has been reset.")
-            self.save_memory()
+                await ctx.send("No memory found for that user.")
         else:
-            await ctx.send("No memory found for this channel.")    
-            
-            
+            await ctx.send("Please specify a user ID to reset their memory.")
+
+    @commands.command(name="save")
+    @commands.has_permissions(administrator=True)
+    async def save_all_memories(self, ctx):
+        """Save temporary memory to individual user files."""
+        for user_id, memory in self.temp_memory.items():
+            self.save_user_memory(user_id, memory)
+        await ctx.send("All memories have been saved.")
+
 # Function to add the cog to the bot
 async def setup(bot):
     await bot.add_cog(MistralCog(bot))
