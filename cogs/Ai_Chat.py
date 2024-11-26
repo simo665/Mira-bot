@@ -15,6 +15,7 @@ class MistralCog(commands.Cog):
         self.temp_memory = {}  # Temporary memory for recent messages
         self.message_counter = {}  # Message count per user
         self.summary_threshold = 15  # Number of messages before generating a summary
+        self.knowledge = knowledge
 
         # Ensure the memory directory exists
         os.makedirs(self.memory_dir, exist_ok=True)
@@ -104,7 +105,7 @@ class MistralCog(commands.Cog):
             print("5")
 
             try:
-                print("4")
+                print("6")
                 async with message.channel.typing():
                     response = self.client.chat.complete(
                         model=self.model,
