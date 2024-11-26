@@ -11,7 +11,7 @@ class MistralCog(commands.Cog):
         self.api_key = api_key
         self.model = "mistral-large-latest"
         self.client = Mistral(api_key=self.api_key)
-        self.memory_dir = "user/user_memories"  # Directory for individual user memories
+        self.memory_dir = "/app/user/user_memories"  # Directory for individual user memories
         self.temp_memory = {}  # Temporary memory for recent messages
         self.message_counter = {}  # Message count per user
         self.summary_threshold = 15  # Number of messages before generating a summary
