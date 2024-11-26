@@ -81,15 +81,17 @@ class MistralCog(commands.Cog):
     
         # Process only if the bot is mentioned
         if self.bot.user in message.mentions:
+            print(1)
             user_memory = self.load_user_memory(self, user_id)
+            print(2)
             recent_messages = user_memory["recent_messages"]
-
+            print(3)
             # Add the user's message to recent messages
             recent_messages.append({"role": "user", "content": message.content})
-
+            print(4)
             assistant_message = f"The user's name is {message.author.display_name}. Use this name in replies. "
             assistant_message += self.knowledge
-            print("3")
+            print("5")
 
             try:
                 print("4")
