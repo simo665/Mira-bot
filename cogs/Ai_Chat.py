@@ -20,23 +20,18 @@ class MistralCog(commands.Cog):
 
         # Ensure the memory directory exists
         os.makedirs(self.memory_dir, exist_ok=True)
-        print(f"Memory directory absolute path: {os.path.abspath(self.memory_dir)}")
+        
 
     def load_user_memory(self, user_id):
         """Load memory for a specific user from a JSON file."""
-        print("I'm inside loading function")
         memory_file = os.path.join(self.memory_dir, f"{user_id}.json")
-        print(f"Does the path exist? {os.path.exists(memory_file)}")
         if os.path.exists(memory_file):
             try:
                 with open(memory_file, "r") as f:
                     memory = json.load(f)
-                    print(f"Memory loaded for user {user_id}: {memory}")
                     return memory
             except Exception as e:
                 print(f"Error reading file for user {user_id}: {e}")
-        else:
-            print(f"Memory file not found for user {user_id}, returning default.")
         return {"summaries": [], "recent_messages": []}
             
     def save_user_memory(self, user_id, memory):
@@ -93,20 +88,15 @@ class MistralCog(commands.Cog):
     
         # Process only if the bot is mentioned
         if self.bot.user in message.mentions:
-            print(1)
             user_memory = self.load_user_memory(user_id)
-            print(2)
             recent_messages = user_memory["recent_messages"]
-            print(3)
             # Add the user's message to recent messages
             recent_messages.append({"role": "user", "content": message.content})
-            print(4)
+            
             assistant_message = f"The user's name is {message.author.display_name}. Use this name in replies. "
             assistant_message += self.knowledge
-            print("5")
 
             try:
-                print("6")
                 async with message.channel.typing():
                     response = self.client.chat.complete(
                         model=self.model,
@@ -117,18 +107,16 @@ class MistralCog(commands.Cog):
                         ],
                     )
                 ai_reply = response.choices[0].message.content
-                print("5")
+                
                 # Add assistant reply to recent messages
                 recent_messages.append({"role": "assistant", "content": ai_reply})
                 user_memory["recent_messages"] = recent_messages
-                print("6")
                 # Save user memory and track message count
                 self.message_counter[user_id] = self.message_counter.get(user_id, 0) + 1
                 if self.message_counter[user_id] >= self.summary_threshold:
                     await self.generate_summary(user_id)
                     self.message_counter[user_id] = 0  # Reset counter
-
-                self.save_user_memory(user_id, user_memory)
+                    self.save_user_memory(user_id, user_memory)
 
                 # Send the AI's response
                 await message.channel.send(ai_reply)
