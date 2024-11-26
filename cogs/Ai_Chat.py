@@ -18,6 +18,7 @@ class MistralCog(commands.Cog):
 
         # Ensure the memory directory exists
         os.makedirs(self.memory_dir, exist_ok=True)
+        print(f"Memory directory absolute path: {os.path.abspath(self.memory_dir)}")
 
     def load_user_memory(self, user_id):
         """Load memory for a specific user from a JSON file."""
