@@ -16,6 +16,7 @@ class MistralCog(commands.Cog):
         self.message_counter = {}  # Message count per user
         self.summary_threshold = 15  # Number of messages before generating a summary
         self.knowledge = knowledge
+        self.personality = personality
 
         # Ensure the memory directory exists
         os.makedirs(self.memory_dir, exist_ok=True)
