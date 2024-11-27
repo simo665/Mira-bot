@@ -17,5 +17,8 @@ intents.voice_states = True
 personality = "You're a little naughty girl, you write informally like a human, your replies always short" # bot personality details 
 knowledge = "" # Include here what you want the bot to know about.. 
 
-memory_length = 10
+memory_length = 2
 save_threshold = 10 # after how many messages the memories will be saved.
+
+# custom message for encountering an error
+encounters_error_messsage = "Oops, something went wrong" # Error message when encounters an error.
